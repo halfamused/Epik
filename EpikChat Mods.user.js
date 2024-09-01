@@ -502,24 +502,21 @@ function appendImgurEmbed(imgurId) {
 })();
 
 
-
-
-
-
 // Create and configure the div to replace #home-trending
 const newDiv = document.createElement('div');
-newDiv.className = 'btn-group list-search';
+//newDiv.className = 'btn-group list-search';
+newDiv.style.margin = '7px'; // Set 10px margin on all sides
 
 // Create the input box
 const input = document.createElement('input');
 input.type = 'text';
 input.className = 'search';
-input.placeholder = 'Set Shared Link';
+input.placeholder = 'LINK SHARED WITH YOU';
 
 // Create the "Set" button
 const setButton = document.createElement('button');
 setButton.className = 'badge';
-setButton.textContent = 'Set';
+setButton.textContent = 'SET';
 setButton.addEventListener('click', () => {
     const iframe = document.querySelector('#epikgame');
     if (iframe) {
@@ -536,24 +533,49 @@ inputContainer.style.alignItems = 'center';
 inputContainer.appendChild(input);
 inputContainer.appendChild(setButton);
 
+// Create clones of the input and button
+// Create the input box
+const input2 = document.createElement('input');
+input2.type = 'text';
+input2.className = 'search';
+input2.placeholder = 'POST LINK IN CHAT';
+
+// Create the "Set" button
+const setButton2 = document.createElement('button');
+var msg = input2.value
+setButton2.className = 'badge';
+setButton2.textContent = 'POST';
+setButton2.addEventListener('click', function() {
+        cApp.t_me(input2.value);
+});
+
+// Create a container for the cloned input and button
+const clonedInputContainer = document.createElement('div');
+clonedInputContainer.style.display = 'flex';
+clonedInputContainer.style.alignItems = 'center';
+
+// Append cloned input and button to the container
+clonedInputContainer.appendChild(input2);
+clonedInputContainer.appendChild(setButton2);
+
 // Create the "Game Visibility:" label
 const nameDiv = document.createElement('div');
 nameDiv.className = 'name';
-nameDiv.textContent = 'Game Visibility:';
+nameDiv.textContent = '   Game Visibility:';
 
 // Create the toggle button for game visibility
 const toggleButton = document.createElement('button');
 toggleButton.className = 'badge';
-toggleButton.textContent = 'Show';
+toggleButton.textContent = 'SHOW';
 toggleButton.addEventListener('click', () => {
     const gameDiv = document.querySelector('#gamediv');
     if (gameDiv) {
         if (gameDiv.style.display === 'none' || gameDiv.style.display === '') {
             gameDiv.style.display = 'block';
-            toggleButton.textContent = 'Hide';
+            toggleButton.textContent = 'HIDE';
         } else {
             gameDiv.style.display = 'none';
-            toggleButton.textContent = 'Show';
+            toggleButton.textContent = 'SHOW';
         }
     }
 });
@@ -562,28 +584,24 @@ toggleButton.addEventListener('click', () => {
 const visibilityContainer = document.createElement('div');
 visibilityContainer.style.display = 'flex';
 visibilityContainer.style.alignItems = 'center';
+visibilityContainer.style.justifyContent = 'space-between'; // Align items to the edges
 
 // Append the "Game Visibility:" label and toggle button to the container
 visibilityContainer.appendChild(nameDiv);
 visibilityContainer.appendChild(toggleButton);
 
-// Append elements to the new div
+// Append all containers to the new div
 newDiv.appendChild(inputContainer);
+newDiv.appendChild(clonedInputContainer);
 newDiv.appendChild(visibilityContainer);
 
-// Replace #home-trending with the new div
-const homeTrending = document.querySelector('#home-trending');
-if (homeTrending) {
-    homeTrending.replaceWith(newDiv);
-}
 
 // Create a wrapper div for input and links
 const wrapper = document.createElement("div");
 
-// Create the section header
-var sectionHeader = document.querySelector("#home-inner > div:nth-child(5)");
-sectionHeader.className = "section-header";
-sectionHeader.textContent = "CREATE A NEW GAME";
+const sectionHeader = document.createElement('h2');
+sectionHeader.className = 'section-header'; // Apply the class name for styling
+sectionHeader.textContent = 'CREATE A NEW GAME'; // Set the text content
 
 
 // Create and append the first link element
@@ -799,11 +817,19 @@ wrapper.appendChild(link6);
 wrapper.appendChild(link7);
 
 // Replace the existing element with the new wrapper
-var outa = document.querySelector("#home-inner");
-var inna = document.querySelector("#home-trending");
-var doodle = document.querySelector("#home-media-doodles");
-var gobye2 = document.querySelector("#home-inner > div:nth-child(5)");
-outa.replaceChild(wrapper, doodle);
+const outa = document.querySelector("#home-inner");
+const trend = document.querySelector("#home-trending");
+const doodle = document.querySelector("#home-media-doodles");
+const gobye = document.querySelector("#home-inner > div:nth-child(2)");
+newDiv.appendChild(wrapper);
+outa.replaceChild(newDiv, trend);
+//outa.replaceChild(wrapper, doodle);
+
+// Check if the element exists before attempting to remove it
+if (gobye) {
+    gobye.className = "section-header";
+    gobye.textContent = "ENTER GAME LINKS";
+}
 
 // Custom button and link styling within JavaScript
 var style = document.createElement('style');
