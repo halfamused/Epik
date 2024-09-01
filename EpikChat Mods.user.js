@@ -2,11 +2,12 @@
 // @name         EpikChat Mods
 // @namespace    http://tampermonkey.net/
 // @version      2024-09-01
-// @description  try to take over the world!
+// @description  v1.00
 // @author       You
 // @match        https://www.epikchat.com/chat
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=epikchat.com
 // @grant        none
+// @updateURL    https://github.com/halfamused/Epik/raw/main/EpikChat%20Mods.user.js
 // ==/UserScript==
 
 // Mods list:
