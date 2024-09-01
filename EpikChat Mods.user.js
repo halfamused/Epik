@@ -593,12 +593,6 @@ link1.className = "list-item"; // Apply a new class
 link1.target = "_blank"; // Open link in a new tab
 link1.style.position = 'relative'; // Position relative for the overlay
 
-function clk1(e) {
-    //e.preventDefault(); // Prevent the link from opening in a new tab
-    const iframe = document.querySelector('#epikgame');
-    iframe.src = link1.href;
-}
-
 // Create inner HTML for the first link
 link1.innerHTML = `
     <div class="media">
@@ -607,10 +601,28 @@ link1.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Poker Now</div>
-            <div class="text-overlay"</div>
+            <div class="text-overlay"></div>
         </div>
     </div>`;
-// link1.onclick = clk1;
+
+// Optionally, if you want to also update the iframe when this link is clicked
+link1.onclick = function(e) {
+    // Open the link in a new tab
+    const newTab = window.open(link1.href, '_blank');
+
+    // Optionally update the iframe if needed later
+    if (newTab) {
+        newTab.addEventListener('beforeunload', function() {
+            const iframe = document.querySelector('#epikgame');
+            iframe.src = link1.href;
+        });
+    } else {
+        // If pop-up is blocked or in case of failure
+        const iframe = document.querySelector('#epikgame');
+        iframe.src = link1.href;
+    }
+};
+
 
 // Create and append the second link element
 var link2 = document.createElement("a");
@@ -619,12 +631,14 @@ link2.className = "list-item"; // Apply a new class
 link2.target = "_blank"; // Open link in a new tab
 link2.style.position = 'relative'; // Position relative for the overlay
 
+// Create variable to replace epikgame iframe
 function clk2(e) {
     e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link2.href;
 }
 
+// Create inner HTML for the second link
 link2.innerHTML = `
     <div class="media">
         <div class="media-left">
@@ -644,8 +658,8 @@ link3.className = "list-item"; // Apply a new class
 link3.target = "_blank"; // Open link in a new tab
 link3.style.position = 'relative'; // Position relative for the overlay
 
-// Create variable to replace YT
-function clk3() {
+// Create variable to replace epikgame iframe
+function clk3(e) {
     e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link3.href;
@@ -659,34 +673,34 @@ link3.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Connect 4</div>
-            <div class="text-overlay"</div>
+            <div class="text-overlay"></div> <!-- Ensure this tag is properly closed -->
         </div>
     </div>`;
 link3.onclick = clk3; // Attach the onclick event handler
 
-// Create and append the forth link element
+// Create and append the fourth link element
 var link4 = document.createElement("a");
 link4.href = "https://picturecards.online/static/index.html"; // Set href to open the desired URL
 link4.className = "list-item"; // Apply a new class
 link4.target = "_blank"; // Open link in a new tab
 link4.style.position = 'relative'; // Position relative for the overlay
 
-// Create variable to replace YT
-function clk4() {
+// Create variable to replace epikgame iframe
+function clk4(e) {
     e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link4.href;
 }
 
-// Create inner HTML for the forth link
+// Create inner HTML for the fourth link
 link4.innerHTML = `
     <div class="media">
         <div class="media-left">
-            <img class="img-circle media-object" src="https://www.epikchat.com/sites/default/files/media/photos/29/762835-1724633326.png" alt="Connect 4 Image">
+            <img class="img-circle media-object" src="https://www.epikchat.com/sites/default/files/media/photos/29/762835-1724633326.png" alt="Cards Against Humanity Image">
         </div>
         <div class="media-body">
             <div class="name">Cards Against Humanity</div>
-            <div class="text-overlay"</div>
+            <div class="text-overlay"></div> <!-- Ensure this tag is properly closed -->
         </div>
     </div>`;
 link4.onclick = clk4; // Attach the onclick event handler
@@ -698,8 +712,8 @@ link5.className = "list-item"; // Apply a new class
 link5.target = "_blank"; // Open link in a new tab
 link5.style.position = 'relative'; // Position relative for the overlay
 
-// Create variable to replace YT
-function clk5() {
+// Create variable to replace epikgame iframe
+function clk5(e) {
     e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link5.href;
@@ -709,11 +723,11 @@ function clk5() {
 link5.innerHTML = `
     <div class="media">
         <div class="media-left">
-            <img class="img-circle media-object" src="https://www.epikchat.com/sites/default/files/media/photos/29/762835-1724659752.png" alt="Connect 4 Image">
+            <img class="img-circle media-object" src="https://www.epikchat.com/sites/default/files/media/photos/29/762835-1724659752.png" alt="Bones Image">
         </div>
         <div class="media-body">
             <div class="name">Bones</div>
-            <div class="text-overlay"</div>
+            <div class="text-overlay"></div> <!-- Ensure this tag is properly closed -->
         </div>
     </div>`;
 link5.onclick = clk5; // Attach the onclick event handler
@@ -725,8 +739,8 @@ link6.className = "list-item"; // Apply a new class
 link6.target = "_blank"; // Open link in a new tab
 link6.style.position = 'relative'; // Position relative for the overlay
 
-// Create variable to replace YT
-function clk6() {
+// Create variable to replace epikgame iframe
+function clk6(e) {
     e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link6.href;
@@ -736,11 +750,11 @@ function clk6() {
 link6.innerHTML = `
     <div class="media">
         <div class="media-left">
-            <img class="img-circle media-object" src="https://www.epikchat.com/sites/default/files/media/photos/29/762835-1724659841.png" alt="Connect 4 Image">
+            <img class="img-circle media-object" src="https://www.epikchat.com/sites/default/files/media/photos/29/762835-1724659841.png" alt="Asshole Image">
         </div>
         <div class="media-body">
             <div class="name">Asshole</div>
-            <div class="text-overlay"</div>
+            <div class="text-overlay"></div> <!-- Ensure this tag is properly closed -->
         </div>
     </div>`;
 link6.onclick = clk6; // Attach the onclick event handler
@@ -752,25 +766,26 @@ link7.className = "list-item"; // Apply a new class
 link7.target = "_blank"; // Open link in a new tab
 link7.style.position = 'relative'; // Position relative for the overlay
 
-// Create variable to replace YT
-function clk7() {
+// Create variable to replace epikgame iframe
+function clk7(e) {
     e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link7.href;
 }
 
-// Create inner HTML for the sixth link
+// Create inner HTML for the seventh link
 link7.innerHTML = `
     <div class="media">
         <div class="media-left">
-            <img class="img-circle media-object" src="https://www.epikchat.com/sites/default/files/media/photos/29/762835-1725081679.png" alt="Connect 4 Image">
+            <img class="img-circle media-object" src="https://www.epikchat.com/sites/default/files/media/photos/29/762835-1725081679.png" alt="Monopoly Image">
         </div>
         <div class="media-body">
             <div class="name">Monopoly</div>
-            <div class="text-overlay"</div>
+            <div class="text-overlay"></div> <!-- Ensure this tag is properly closed -->
         </div>
     </div>`;
 link7.onclick = clk7; // Attach the onclick event handler
+
 
 
 // Append the Game Links to Right Panel
