@@ -2,8 +2,8 @@
 // @name         EpikChat Mods
 // @namespace    http://tampermonkey.net/
 // @version      2024-09-01
-// @description  v1.00
-// @author       You
+// @description  v1.00 test
+// @author       half_amused
 // @match        https://www.epikchat.com/chat
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=epikchat.com
 // @grant        none
