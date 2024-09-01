@@ -593,65 +593,11 @@ link1.className = "list-item"; // Apply a new class
 link1.target = "_blank"; // Open link in a new tab
 link1.style.position = 'relative'; // Position relative for the overlay
 
-function openTextInputPopup() {
-    // Create the popup container
-    var popup = document.createElement('div');
-    popup.style.position = 'fixed';
-    popup.style.left = '50%';
-    popup.style.top = '50%';
-    popup.style.transform = 'translate(-50%, -50%)';
-    popup.style.backgroundColor = 'white';
-    popup.style.border = '1px solid #ccc';
-    popup.style.padding = '20px';
-    popup.style.zIndex = '1000';
-    popup.style.boxShadow = '0px 0px 10px rgba(0,0,0,0.1)';
-    popup.style.width = '300px';
-    popup.style.textAlign = 'center';
-
-    // Create the text input field
-    var textInput = document.createElement('input');
-    textInput.type = 'text';
-    textInput.style.width = '100%';
-    textInput.style.padding = '10px';
-    textInput.style.marginBottom = '10px';
-
-    // Create the submit button
-    var submitButton = document.createElement('button');
-    submitButton.textContent = 'Submit';
-    submitButton.style.padding = '10px 20px';
-    submitButton.style.cursor = 'pointer';
-
-    // Add an event listener to the button to handle the input value
-    submitButton.addEventListener('click', function() {
-        const iframe = document.querySelector('#epikgame');
-        frame.src = link2.href;
-        document.body.removeChild(popup); // Close the popup
-    });
-
-    // Create the cancel button
-    var cancelButton = document.createElement('button');
-    cancelButton.textContent = 'Cancel';
-    cancelButton.style.padding = '10px 20px';
-    cancelButton.style.cursor = 'pointer';
-    cancelButton.style.marginLeft = '10px';
-
-    // Add an event listener to the cancel button to close the popup
-    cancelButton.addEventListener('click', function() {
-        document.body.removeChild(popup); // Close the popup
-    });
-
-    // Append elements to the popup
-    popup.appendChild(textInput);
-    popup.appendChild(submitButton);
-    popup.appendChild(cancelButton);
-
-    // Append the popup to the body
-    document.body.appendChild(popup);
+function clk1(e) {
+    //e.preventDefault(); // Prevent the link from opening in a new tab
+    const iframe = document.querySelector('#epikgame');
+    iframe.src = link1.href;
 }
-
-// Call the function to open the popup
-// openTextInputPopup();
-
 
 // Create inner HTML for the first link
 link1.innerHTML = `
@@ -661,9 +607,10 @@ link1.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Poker Now</div>
-            <div class="text-overlay" onclick=" openTextInputPopup(); return false;"></div> <!-- Overlay for the text -->
+            <div class="text-overlay"</div>
         </div>
     </div>`;
+// link1.onclick = clk1;
 
 // Create and append the second link element
 var link2 = document.createElement("a");
@@ -672,12 +619,12 @@ link2.className = "list-item"; // Apply a new class
 link2.target = "_blank"; // Open link in a new tab
 link2.style.position = 'relative'; // Position relative for the overlay
 
-function clk2() {
+function clk2(e) {
+    e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link2.href;
 }
 
-// Create inner HTML for the second link
 link2.innerHTML = `
     <div class="media">
         <div class="media-left">
@@ -685,9 +632,10 @@ link2.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Skribbl.io</div>
-            <div class="text-overlay" onclick="clk2()"></div> <!-- Corrected the function call -->
+            <div class="text-overlay"></div>
         </div>
     </div>`;
+link2.onclick = clk2; // Attach the onclick event handler
 
 // Create and append the third link element
 var link3 = document.createElement("a");
@@ -698,6 +646,7 @@ link3.style.position = 'relative'; // Position relative for the overlay
 
 // Create variable to replace YT
 function clk3() {
+    e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link3.href;
 }
@@ -710,9 +659,10 @@ link3.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Connect 4</div>
-            <div class="text-overlay" onclick="clk3()"></div> <!-- Corrected the function call -->
+            <div class="text-overlay"</div>
         </div>
     </div>`;
+link3.onclick = clk3; // Attach the onclick event handler
 
 // Create and append the forth link element
 var link4 = document.createElement("a");
@@ -723,6 +673,7 @@ link4.style.position = 'relative'; // Position relative for the overlay
 
 // Create variable to replace YT
 function clk4() {
+    e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link4.href;
 }
@@ -735,9 +686,10 @@ link4.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Cards Against Humanity</div>
-            <div class="text-overlay" onclick="clk4()"></div> <!-- Corrected the function call -->
+            <div class="text-overlay"</div>
         </div>
     </div>`;
+link4.onclick = clk4; // Attach the onclick event handler
 
 // Create and append the fifth link element
 var link5 = document.createElement("a");
@@ -748,6 +700,7 @@ link5.style.position = 'relative'; // Position relative for the overlay
 
 // Create variable to replace YT
 function clk5() {
+    e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link5.href;
 }
@@ -760,9 +713,10 @@ link5.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Bones</div>
-            <div class="text-overlay" onclick="clk5()"></div> <!-- Corrected the function call -->
+            <div class="text-overlay"</div>
         </div>
     </div>`;
+link5.onclick = clk5; // Attach the onclick event handler
 
 // Create and append the sixth link element
 var link6 = document.createElement("a");
@@ -773,6 +727,7 @@ link6.style.position = 'relative'; // Position relative for the overlay
 
 // Create variable to replace YT
 function clk6() {
+    e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link6.href;
 }
@@ -785,9 +740,10 @@ link6.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Asshole</div>
-            <div class="text-overlay" onclick="clk6()"></div> <!-- Corrected the function call -->
+            <div class="text-overlay"</div>
         </div>
     </div>`;
+link6.onclick = clk6; // Attach the onclick event handler
 
 // Create and append the seventh link element
 var link7 = document.createElement("a");
@@ -798,6 +754,7 @@ link7.style.position = 'relative'; // Position relative for the overlay
 
 // Create variable to replace YT
 function clk7() {
+    e.preventDefault(); // Prevent the link from opening in a new tab
     const iframe = document.querySelector('#epikgame');
     iframe.src = link7.href;
 }
@@ -810,9 +767,10 @@ link7.innerHTML = `
         </div>
         <div class="media-body">
             <div class="name">Monopoly</div>
-            <div class="text-overlay" onclick="clk7()"></div> <!-- Corrected the function call -->
+            <div class="text-overlay"</div>
         </div>
     </div>`;
+link7.onclick = clk7; // Attach the onclick event handler
 
 
 // Append the Game Links to Right Panel
@@ -1303,4 +1261,5 @@ logUserNames();
 const inputElement = document.querySelector("#chatInputWrapper > div.dropup > div.emojionearea.emojionearea-inline > div.emojionearea-editor");
 inputElement.addEventListener('input', handleInput);
 inputElement.addEventListener('keydown', handleKeyDown);
+
 
