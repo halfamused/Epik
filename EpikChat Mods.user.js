@@ -8,6 +8,7 @@
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=epikchat.com
 // @grant        none
 // @updateURL    https://github.com/halfamused/Epik/raw/main/EpikChat%20Mods.user.js
+// @downloadURL  https://github.com/halfamused/Epik/raw/main/EpikChat%20Mods.user.js
 // ==/UserScript==
 
 // Mods list:
