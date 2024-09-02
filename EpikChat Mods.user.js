@@ -23,7 +23,7 @@
 // Coming soon:
 // Temporary Block - The inverse of the Filter Mod, the messages of people added to this list will not be seen in whatever room you are chatting in.
 // Mods Menu - A Menu Panel added to the EpikChat Menu that allows you to enable and disable all mods.
-
+// Bug fix - @username in the middle of a sentense. Use it or make it only at the beginning?
 
 
 
@@ -1303,4 +1303,379 @@ const inputElement = document.querySelector("#chatInputWrapper > div.dropup > di
 inputElement.addEventListener('input', handleInput);
 inputElement.addEventListener('keydown', handleKeyDown);
 
+// ********************************************************************chat logs********************************************************************
+
+
+  // Create the new <a> element
+  const newLink = document.createElement('a');
+  newLink.href = '#';  // Correct href attribute
+  newLink.className = 'list-group-item m-a-0 settings-list';
+  newLink.target = '_blank';  // Fixed target attribute
+
+  // Create the inner content of the <a> element
+  newLink.innerHTML = `
+    <i class="fas fa-fw fa-comment-alt"></i>
+    <span class="title">Chat Logs</span>
+    <i class="fas fa-fw pull-right fa-chevron-right"></i>
+  `;
+
+  // Prevent the default click action
+  newLink.addEventListener('click', function(event) {
+    event.preventDefault(); // Prevents the default action of the <a> element
+    console.log("Link click action prevented.");
+  });
+
+  // Select the target container
+  const targetContainer = document.querySelector("#chatSettings_modal > div > div.modal-content.main > div.modal-body.main");
+
+  // Check if the target container is found
+  if (targetContainer) {
+    // Append the new <a> element to the target container
+    targetContainer.appendChild(newLink);
+    console.log("Element appended successfully.");
+  } else {
+    console.log("Target container not found.");
+  }
+
+  // Create the new <div> element with the specified HTML structure
+  const newModalContent = document.createElement('div');
+  newModalContent.className = 'modal-content chat-logs-content';  // New unique class
+  newModalContent.style.display = 'none';  // Set initial display to none
+
+  newModalContent.innerHTML = `
+    <div class="modal-header">
+      <h4 class="modal-title">
+        <i class="fas fa-fw fa-arrow-left section-close" style="cursor:pointer; margin-right:6px;"></i>
+        Chat Logs
+      </h4>
+    </div>
+    <div class="modal-body">
+      <div class="setting">
+        <div class="setting-title">Choose 1</div>
+        <ul class="list-group" style="margin-top:10px;margin-bottom: 0;">
+          <li class="list-group-item">
+            <div class="radio custom-control custom-radio m-a-0">
+              <label>
+                Room
+                <input type="radio" name="Room" class="multi-input" data-setting="room" value="room">
+                <span class="custom-control-indicator"></span>
+              </label>
+            </div>
+          </li>
+          <li class="list-group-item">
+            <div class="radio custom-control custom-radio m-a-0">
+              <label>
+                Direct Message
+                <input type="radio" name="Room" class="multi-input" data-setting="room" value="dm">
+                <span class="custom-control-indicator"></span>
+              </label>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <!-- New Inputs for Name and Keyword -->
+      <div class="setting" style="margin-top:20px;">
+        <div class="setting-title">Filter by:</div>
+        <div class="form-group">
+          <label for="filterName">Name</label>
+          <input type="text" class="form-control" id="filterName" placeholder="Enter name">
+        </div>
+        <div class="form-group">
+          <label for="filterKeyword">Keyword</label>
+          <input type="text" class="form-control" id="filterKeyword" placeholder="Enter keyword">
+        </div>
+      </div>
+
+      <div class="setting-description p-a-0">
+        <br>
+        <div class="hotkey-row">
+          <div class="type">This Mod requires DominantStranger's EpikChat Enhancements</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="modal-footer" style="display: flex; justify-content: flex-end;">
+      <button id="submitButton" class="btn btn-primary">Submit</button>
+    </div>
+  `;
+
+  // Select the updated target container
+  const updatedTargetContainer = document.querySelector("#chatSettings_modal > div");
+
+  // Check if the updated target container is found
+  if (updatedTargetContainer) {
+    // Append the new <div> element to the updated target container
+    updatedTargetContainer.appendChild(newModalContent);
+    console.log("Modal content appended successfully.");
+  } else {
+    console.log("Updated target container not found.");
+  }
+
+  // Set display to none for specific elements
+  const modalContentMain = document.querySelector("#chatSettings_modal > div > div.modal-content.main");
+  const modalFooter = document.querySelector("#chatSettings_modal > div > div.modal-content.main > div.modal-footer");
+
+  if (modalContentMain) {
+    modalContentMain.style.display = 'block';
+    console.log("Modal content main display set to block.");
+  }
+
+  if (modalFooter) {
+    modalFooter.style.display = 'none';
+    console.log("Modal footer display set to none.");
+  }
+
+  // Add event listener to the back button to hide the new modal content
+  const backButton = newModalContent.querySelector('.section-close');
+
+  if (backButton) {
+    backButton.addEventListener('click', function() {
+      newModalContent.style.display = 'none'; // Hide the modal content
+      console.log("Modal content hidden.");
+    });
+  } else {
+    console.log("Back button not found.");
+  }
+
+  // Add event listener to the Chat Logs button
+  newLink.addEventListener('click', function(event) {
+    event.preventDefault(); // Prevents the default action of the <a> element
+
+    // Toggle the visibility of the new modal content
+    if (newModalContent.style.display === 'none') {
+      newModalContent.style.display = 'block'; // Show the modal content
+
+      // Ensure existing modal content is hidden
+      if (modalContentMain) {
+        modalContentMain.style.display = 'none';
+        console.log("Existing modal content hidden.");
+      }
+    } else {
+      newModalContent.style.display = 'none'; // Hide the modal content
+    }
+
+    console.log("Chat Logs button clicked. Modal contents visibility toggled.");
+  });
+
+  // Ensure the settings button is not interfering
+  const settingsButton = document.querySelector('[data-toggle="modal"][data-target="#chatSettings_modal"]');
+
+  if (settingsButton) {
+    settingsButton.addEventListener('click', function() {
+      // Ensure the settings modal is shown and the Chat Logs modal content is hidden
+      if (newModalContent.style.display === 'block') {
+        newModalContent.style.display = 'none';
+      }
+      console.log("Settings button clicked. Ensured Chat Logs modal content is hidden.");
+    });
+  } else {
+    console.log("Settings button not found.");
+  }
+
+  //////////////////////////////////////////
+// Function to create a new HTML element with provided content
+function createNewChatItemHTML(content) {
+    // Function to detect URLs and convert them into clickable links
+    function makeUrlsClickable(text) {
+        const urlRegex = /(\bhttps?:\/\/[^\s/$.?#].[^\s]*)/gi;
+        return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+    }
+
+    // Process the message content to make URLs clickable
+    const messageTextWithLinks = makeUrlsClickable(content.message);
+
+    // Format the timestamp to include both date and time
+    const formattedTimestamp = new Date(content.timestamp).toLocaleString();
+
+    return `
+      <div class="chat-item message" style="color: ${content.format_color};" data-item-id="${content._id}">
+        <div class="time-stamp" aria-label="${formattedTimestamp}" data-microtip-position="top" role="tooltip">${formattedTimestamp}</div>
+        <div class="message-content">
+          <span class="user-name">${content.name}</span>
+          <div class="message-text">${messageTextWithLinks}</div>
+        </div>
+      </div>
+    `;
+}
+
+
+// Function to copy scrollbar styles
+function copyScrollbarStyles(sourceElement, targetElement) {
+    const scrollbarStyles = window.getComputedStyle(sourceElement, '::-webkit-scrollbar');
+    const scrollbarThumbStyles = window.getComputedStyle(sourceElement, '::-webkit-scrollbar-thumb');
+
+    // Copy scrollbar styles
+    targetElement.style.setProperty('--scrollbar-width', scrollbarStyles.width);
+    targetElement.style.setProperty('--scrollbar-bg', scrollbarStyles.backgroundColor);
+
+    // Copy scrollbar thumb styles
+    targetElement.style.setProperty('--scrollbar-thumb-bg', scrollbarThumbStyles.backgroundColor);
+    targetElement.style.setProperty('--scrollbar-thumb-border-radius', scrollbarThumbStyles.borderRadius);
+
+    // Apply the styles to the target element
+    targetElement.style.scrollbarWidth = 'var(--scrollbar-width)';
+    targetElement.style.scrollbarColor = 'var(--scrollbar-thumb-bg) var(--scrollbar-bg)';
+    targetElement.style.overflowY = 'scroll'; // Ensure the scrollbar is visible
+}
+
+// Function to simulate a mouse click at the top-left pixel of the document
+function simulateClickAtTopLeft() {
+    const topLeftElement = document.elementFromPoint(0, 0);
+    if (topLeftElement) {
+        const clickEvent = new MouseEvent('click', {
+            view: window,
+            bubbles: true,
+            cancelable: true,
+            clientX: 0,
+            clientY: 0
+        });
+        topLeftElement.dispatchEvent(clickEvent);
+        console.log("Simulated click at the top-left pixel.");
+    } else {
+        console.log("No element found at the top-left pixel.");
+    }
+}
+
+// Ensure the `submitButton` is declared only once
+const submitButton = newModalContent.querySelector('#submitButton');
+
+// Check if the submitButton element is found
+if (submitButton) {
+    submitButton.addEventListener('click', async function() {
+        // Get the selected radio button value
+        const selectedRoomType = document.querySelector('input[name="Room"]:checked');
+        const roomTypeValue = selectedRoomType ? selectedRoomType.value : 'None';
+
+        // Get the values of the Name and Keyword inputs
+        const nameValue = document.getElementById('filterName').value.trim();
+        const keywordValue = document.getElementById('filterKeyword').value.trim();
+
+        // Log the collected values
+        console.log("Room Type:", roomTypeValue);
+        console.log("Name:", nameValue);
+        console.log("Keyword:", keywordValue);
+
+        // Variable to hold the fetched messages
+        let msgs;
+
+        try {
+            // Fetch chat logs based on the room type
+            if (roomTypeValue === 'room') {
+                msgs = await CLOUD.fetchChatLogs({ name: nameValue });
+            } else if (roomTypeValue === 'dm') {
+                msgs = await CLOUD.fetchChatLogs({ dm: nameValue });
+            } else {
+                console.log("No valid room type selected.");
+                return; // Exit if no valid room type is selected
+            }
+
+            // Check if msgs were fetched successfully
+            if (msgs && Array.isArray(msgs)) {
+                // Log the entire array of message objects
+                console.log("Fetched Message Objects:", msgs);
+
+                // Filter objects based on the keyword (if provided)
+                let filteredMsgs = msgs;
+
+                if (keywordValue) {
+                    filteredMsgs = msgs.filter(msg =>
+                        msg.message && msg.message.toLowerCase().includes(keywordValue.toLowerCase())
+                    );
+
+                    // Log the filtered objects
+                    console.log("Filtered Message Objects:", filteredMsgs);
+                }
+
+                // Store the filtered list in a constant (if you need to use it later)
+                const finalFilteredMsgs = filteredMsgs;
+
+                // Log the final filtered list
+                console.log("Final Filtered Message Objects:", finalFilteredMsgs);
+
+                // Ensure the original node with the ID "messagesLC" is selected
+                const originalNode = document.querySelector("#messagesLC");
+
+                if (originalNode) {
+                    // Clone the original node
+                    const clonedNode = originalNode.cloneNode(true);
+
+                    // Replace the cloned node's content with the filtered messages
+                    clonedNode.innerHTML = ''; // Clear existing content
+
+                    finalFilteredMsgs.forEach(msg => {
+                        const messageHTML = createNewChatItemHTML(msg);
+                        clonedNode.innerHTML += messageHTML; // Append each filtered message
+                    });
+
+                    // Lock the cloned node to the dimensions and location of #messagesLS
+                    const referenceNode = document.querySelector("#messagesLS");
+                    if (referenceNode) {
+                        clonedNode.style.position = 'absolute';
+                        clonedNode.style.top = '0';  // Position at the top inside the target
+                        clonedNode.style.left = '0';  // Position at the left inside the target
+                        clonedNode.style.width = '100%';
+                        clonedNode.style.height = '100%';
+                    }
+
+                    clonedNode.style.overflowY = 'auto';
+                    clonedNode.style.zIndex = '1'; // Ensure it's on top
+                    clonedNode.style.backgroundColor = '#26282B';  // Set background color
+
+                    // Copy scrollbar styles from #messagesLS
+                    copyScrollbarStyles(referenceNode, clonedNode);
+
+                    // Append the cloned node to the original node (inside the target node)
+                    originalNode.appendChild(clonedNode);
+
+                    console.log("Cloned node with populated messages has been added inside the original node.");
+
+                    // Clone the close button
+                    const originalCloseButton = document.querySelector("#ctabs > div.roomheaderinfo > div.roomMenu > span.closeTab > i");
+                    if (originalCloseButton) {
+                        const clonedCloseButton = originalCloseButton.cloneNode(true);
+
+                        // Position the cloned close button on top of the original one
+                        clonedCloseButton.style.position = 'absolute';
+                        clonedCloseButton.style.top = `${originalCloseButton.offsetTop}px`;
+                        clonedCloseButton.style.left = `${originalCloseButton.offsetLeft}px`;
+                        clonedCloseButton.style.zIndex = '10000'; // Ensure it's on top of the overlay
+                        clonedCloseButton.style.cursor = 'pointer';
+
+                        // Append the cloned close button to the same parent as the original
+                        originalCloseButton.parentNode.appendChild(clonedCloseButton);
+
+                        // Event listener to close the overlay and remove the cloned button
+                        clonedCloseButton.addEventListener('click', function() {
+                            clonedNode.style.display = 'none'; // Hide the overlay
+                            clonedCloseButton.remove(); // Remove the cloned close button
+                            console.log("Overlay closed and cloned close button removed.");
+                        });
+
+                        console.log("Cloned close button has been added.");
+                    } else {
+                        console.log("Original close button not found.");
+                    }
+
+                    // Simulate a mouse click at the top-left pixel
+                    simulateClickAtTopLeft();
+
+                } else {
+                    console.log("Original node #messagesLC not found.");
+                }
+
+            } else {
+                console.log("No messages were fetched or the result is not in the expected format.");
+            }
+        } catch (error) {
+            console.error("Error fetching chat logs:", error);
+        }
+
+        // Hide the modal content after submission (optional)
+        newModalContent.style.display = 'none';
+    });
+} else {
+    console.log("Submit button not found.");
+}
 
