@@ -1306,7 +1306,7 @@ inputElement.addEventListener('keydown', handleKeyDown);
 
 // ********************************************************************chat logs********************************************************************
 
-CLOUD = await require('cloud');
+
 // Create the new <a> element
 const newLink = document.createElement('a');
 newLink.href = '#';  // Correct href attribute
@@ -1457,6 +1457,77 @@ if (settingsButton) {
   });
 }
 
+// Wait for the DOM to be fully loaded
+window.addEventListener('load', function() {
+    console.log("Script is running!");
+
+    const ulElement = document.querySelector("#ctabs > ul");
+    if (!ulElement) {
+        console.error("#ctabs > ul not found!");
+        return;
+    }
+
+    console.log("Parent element found, creating new list item...");
+
+    // Create the new <li> element
+    const newListItem = document.createElement("li");
+    newListItem.id = "logtab";
+    newListItem.className = "ui-sortable-handle"; // Updated class name
+    newListItem.setAttribute("data-toggle", "tooltip");
+    newListItem.setAttribute("data-placement", "bottom");
+    newListItem.setAttribute("title", "");
+    newListItem.setAttribute("data-original-title", "Chat Logs");
+
+    const selectedDiv = document.createElement("div");
+    selectedDiv.className = "selected";
+    newListItem.appendChild(selectedDiv);
+
+    const tabDiv = document.createElement("div");
+    tabDiv.className = "tab";
+    tabDiv.setAttribute("data-id", "");
+    tabDiv.setAttribute("data-type", "room");
+    tabDiv.setAttribute("data-rid", "12920");
+
+    const img = document.createElement("img");
+    img.className = "img-circle";
+    img.src = "/sites/default/files/chat/room_icon_uploads/188415_1725411952.jpg";
+    img.style.width = "40px";
+    img.style.height = "40px";
+    tabDiv.appendChild(img);
+
+    newListItem.appendChild(tabDiv);
+    ulElement.appendChild(newListItem);
+
+    console.log("New list item appended.");
+
+    // Function to handle clicks on <li> elements
+    function handleClick(event) {
+        // Hide the chatlogs element for all <li> elements
+        const chatlogs = document.getElementById("chatlogs");
+        if (chatlogs) {
+            chatlogs.style.display = "none";
+        }
+
+        // Show chatlogs if the clicked <li> has id="logtab"
+        if (event.target.closest('li').id === "logtab") {
+            const roomHeaderTitle = document.querySelector("#ctabs > div.roomheaderinfo > div.roomheadertitle");
+            const roomHeaderDesc = document.querySelector("#ctabs > div.roomheaderinfo > div.roomheaderdescription");
+            roomHeaderDesc.innerText = "Generate the log in the chat settings.";
+            roomHeaderTitle.innerText = "Chat Logs";
+            chatlogs.style.display = "block";
+        }
+    }
+
+    // Add event listener to the <ul> to handle clicks on its <li> children
+    ulElement.addEventListener('click', function(event) {
+        if (event.target.closest('li')) {
+            handleClick(event);
+        }
+    });
+
+});
+
+
 // Function to create a new HTML element with provided content
 function createNewChatItemHTML(content) {
   // Function to detect URLs and convert them into clickable links
@@ -1501,8 +1572,10 @@ function copyScrollbarStyles(sourceElement, targetElement) {
   targetElement.style.overflowY = 'scroll'; // Ensure the scrollbar is visible
 }
 
-// Function to simulate a mouse click at the top-left pixel of the document
+
+
 function simulateClickAtTopLeft() {
+  // Simulate click at the top-left corner of the viewport
   const topLeftElement = document.elementFromPoint(0, 0);
   if (topLeftElement) {
     const clickEvent = new MouseEvent('click', {
@@ -1514,12 +1587,58 @@ function simulateClickAtTopLeft() {
     });
     topLeftElement.dispatchEvent(clickEvent);
   }
+
+  // Change classes to simulate the result of the click
+  const ulElement = document.querySelector("#ctabs > ul");
+  if (ulElement) {
+    const listItems = ulElement.querySelectorAll('li');
+    listItems.forEach(li => {
+      if (li.id === "logtab") {
+        li.className = "ui-sortable-handle active";
+      } else {
+        li.className = "ui-sortable-handle";
+      }
+    });
+    console.log("Classes updated based on simulated click.");
+
+    // Call the function to update the room header text
+    updateRoomHeaderText();
+  } else {
+    console.error("#ctabs > ul not found!");
+  }
 }
 
-// Ensure the `submitButton` is declared only once
+
+// Ensure the creation of the cloneNode happens before the submit button logic
+const originalNode = document.querySelector("#messagesLC");
+const destinationNode = document.querySelector("#messagesLS");
+
+let clonedNode = null;
+
+// Create the cloneNode and append it to the destinationNode
+if (originalNode && destinationNode) {
+  clonedNode = originalNode.cloneNode(true);
+  clonedNode.id = 'chatlogs';
+  clonedNode.style.overflowY = 'auto';
+  clonedNode.style.zIndex = '1'; // Ensure it's on top
+  clonedNode.style.backgroundColor = '#26282B';  // Set background color
+  clonedNode.style.display = 'none'; // Hide initially
+  clonedNode.style.position = 'absolute';
+  clonedNode.style.top = '0';  // Position at the top inside the destinationNode
+  clonedNode.style.left = '0';  // Position at the left inside the destinationNode
+  clonedNode.style.width = '100%';
+  clonedNode.style.height = '100%';
+
+  // Copy scrollbar styles from #messagesLS
+  copyScrollbarStyles(destinationNode, clonedNode);
+
+  // Append the cloned node to the destinationNode
+  destinationNode.appendChild(clonedNode);
+}
+
+// Handle the click event on the submit button
 const submitButton = newModalContent.querySelector('#submitButton');
 
-// Check if the submitButton element is found
 if (submitButton) {
   submitButton.addEventListener('click', async function() {
     // Get the selected radio button value
@@ -1554,60 +1673,32 @@ if (submitButton) {
           );
         }
 
-        // Store the filtered list in a constant (if you need to use it later)
-        const finalFilteredMsgs = filteredMsgs;
+        // Ensure the cloned node exists
+        if (clonedNode) {
+          // Clear existing content
+          clonedNode.innerHTML = '';
 
-        // Ensure the original node with the ID "messagesLC" is selected
-        const originalNode = document.querySelector("#messagesLC");
-
-        if (originalNode) {
-          // Clone the original node
-          const clonedNode = originalNode.cloneNode(true);
-
-          // Replace the cloned node's content with the filtered messages
-          clonedNode.innerHTML = ''; // Clear existing content
-
-          finalFilteredMsgs.forEach(msg => {
+          // Append each filtered message
+          filteredMsgs.forEach(msg => {
             const messageHTML = createNewChatItemHTML(msg);
-            clonedNode.innerHTML += messageHTML; // Append each filtered message
+            clonedNode.innerHTML += messageHTML;
           });
 
-          // Lock the cloned node to the dimensions and location of #messagesLS
-          const referenceNode = document.querySelector("#messagesLS");
-          if (referenceNode) {
-            clonedNode.style.position = 'absolute';
-            clonedNode.style.top = '0';  // Position at the top inside the target
-            clonedNode.style.left = '0';  // Position at the left inside the target
-            clonedNode.style.width = '100%';
-            clonedNode.style.height = '100%';
-          }
+          // Show the cloned node
+          clonedNode.style.display = 'block';
 
-          clonedNode.style.overflowY = 'auto';
-          clonedNode.style.zIndex = '1'; // Ensure it's on top
-          clonedNode.style.backgroundColor = '#26282B';  // Set background color
-
-          // Copy scrollbar styles from #messagesLS
-          copyScrollbarStyles(referenceNode, clonedNode);
-
-          // Append the cloned node to the original node (inside the target node)
-          originalNode.appendChild(clonedNode);
-
-          // Clone the close button
+          // Clone and position the close button
           const originalCloseButton = document.querySelector("#ctabs > div.roomheaderinfo > div.roomMenu > span.closeTab > i");
           if (originalCloseButton) {
             const clonedCloseButton = originalCloseButton.cloneNode(true);
-
-            // Position the cloned close button on top of the original one
             clonedCloseButton.style.position = 'absolute';
             clonedCloseButton.style.top = `${originalCloseButton.offsetTop}px`;
             clonedCloseButton.style.left = `${originalCloseButton.offsetLeft}px`;
             clonedCloseButton.style.zIndex = '10000'; // Ensure it's on top of the overlay
             clonedCloseButton.style.cursor = 'pointer';
 
-            // Append the cloned close button to the same parent as the original
             originalCloseButton.parentNode.appendChild(clonedCloseButton);
 
-            // Event listener to close the overlay and remove the cloned button
             clonedCloseButton.addEventListener('click', function() {
               clonedNode.style.display = 'none'; // Hide the overlay
               clonedCloseButton.remove(); // Remove the cloned close button
@@ -1616,15 +1707,19 @@ if (submitButton) {
 
           // Simulate a mouse click at the top-left pixel
           simulateClickAtTopLeft();
-
         }
       }
     } catch (error) {
       // Handle any errors during fetching or processing
+      console.error('Error:', error);
     }
 
     // Hide the modal content after submission (optional)
     newModalContent.style.display = 'none';
   });
 }
+
+
+
+CLOUD = await require('cloud');
 
