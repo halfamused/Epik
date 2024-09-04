@@ -19,6 +19,7 @@
 // Score Card - Adds an interactive whiteboard to manually keep scores in certain games, gives things a more natural game night feel (Replaces Media Tab in the Side Bar).
 // Multivid Popup - Allows you to open multiple free floating cam windows. They are restricted to the chat window. You can still open a single picture-in-picture window by right clicking a cam, which is not restricted to the chat window.
 // @username Autosuggestion - Creates an autosuggestion list when you  type @ and begin typing a , you can click on a name from the list or use tab to choose the top name on the list.
+// Chat Logs (Requires DominantStranger's EpickChat enhancements which you can get here: https://dl.fifo.stream/epik/epik.user.js)
 
 // Coming soon:
 // Temporary Block - The inverse of the Filter Mod, the messages of people added to this list will not be seen in whatever room you are chatting in.
