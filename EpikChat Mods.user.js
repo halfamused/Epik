@@ -1305,6 +1305,7 @@ inputElement.addEventListener('keydown', handleKeyDown);
 
 // ********************************************************************chat logs********************************************************************
 
+CLOUD = await require('cloud');
 // Create the new <a> element
 const newLink = document.createElement('a');
 newLink.href = '#';  // Correct href attribute
@@ -1429,11 +1430,11 @@ if (backButton) {
 // Add event listener to the Chat Logs button
 newLink.addEventListener('click', function(event) {
   event.preventDefault(); // Prevents the default action of the <a> element
-  
+
   // Toggle the visibility of the new modal content
   if (newModalContent.style.display === 'none') {
     newModalContent.style.display = 'block'; // Show the modal content
-    
+
     // Ensure existing modal content is hidden
     if (modalContentMain) {
       modalContentMain.style.display = 'none';
