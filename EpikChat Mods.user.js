@@ -1212,7 +1212,10 @@ function selectSuggestion(filteredIndex) {
 
     if (filteredIndex >= 0 && filteredIndex < filteredNames.length) {
         const userName = filteredNames[filteredIndex];
-        const newText = `@${userName}`; // Username without trailing space
+        const text = inputElement.innerText;
+        const match = text.match(/@(\w*)$/);
+        const beforeAt = text.substring(0, match ? match.index : text.length);
+        const newText = `${beforeAt}@${userName}`; // Maintain text before and replace after @
 
         // Update the content with @username
         inputElement.innerHTML = newText;
@@ -1303,6 +1306,7 @@ logUserNames();
 const inputElement = document.querySelector("#chatInputWrapper > div.dropup > div.emojionearea.emojionearea-inline > div.emojionearea-editor");
 inputElement.addEventListener('input', handleInput);
 inputElement.addEventListener('keydown', handleKeyDown);
+
 
 // ********************************************************************chat logs********************************************************************
 
