@@ -1217,9 +1217,9 @@ function selectSuggestion(filteredIndex) {
     if (filteredIndex >= 0 && filteredIndex < filteredNames.length) {
         const userName = filteredNames[filteredIndex];
         const text = inputElement.innerText;
-        const match = text.match(/@(\w*)$/);
-        const beforeAt = text.substring(0, match ? match.index : text.length);
-        const newText = `${beforeAt}@${userName}`; // Maintain text before and replace after @
+        const match = text.match(/[@\/dm\s](\w*)$/);
+        const beforeKeyphrase = text.substring(0, match ? match.index : text.length);
+        const newText = `${beforeKeyphrase}@${userName}`; // Maintain text before and replace after @
 
         // Update the content with @username
         inputElement.innerHTML = newText;
@@ -1275,7 +1275,7 @@ function updateActiveSuggestion() {
 function handleInput(event) {
     const inputElement = event.target;
     const text = inputElement.innerText; // Use innerText for content extraction
-    const match = text.match(/@(\w*)$/);
+    const match = text.match(/(?:@|\/dm\s)(\w*)$/); // Match @ or /dm followed by a space
     if (match) {
         const query = match[1].toLowerCase();
         filteredNames = userNames
