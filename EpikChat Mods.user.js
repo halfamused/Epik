@@ -2,7 +2,7 @@
 // @name         EpikChat Mods
 // @namespace    http://tampermonkey.net/
 // @version      2024-09-01
-// @description  v1.00 test
+// @description  v1.03
 // @author       half_amused
 // @match        https://www.epikchat.com/chat
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=epikchat.com
@@ -19,12 +19,16 @@
 // Score Card - Adds an interactive whiteboard to manually keep scores in certain games, gives things a more natural game night feel (Replaces Media Tab in the Side Bar).
 // Multivid Popup - Allows you to open multiple free floating cam windows. They are restricted to the chat window. You can still open a single picture-in-picture window by right clicking a cam, which is not restricted to the chat window.
 // @username Autosuggestion - Creates an autosuggestion list when you  type @ and begin typing a , you can click on a name from the list or use tab to choose the top name on the list.
-// Chat Logs (Requires DominantStranger's EpickChat enhancements which you can get here: https://dl.fifo.stream/epik/epik.user.js)
+// Chat Logs - (Requires DominantStranger's EpickChat enhancements which you can get here: https://dl.fifo.stream/epik/epik.user.js)
+// Favorite Users - Allows you to favorite users the same way you can with rooms. Favorite users will appear at the top of the user list and their posts will be highlighted in chat.
+
+// Completed Bug fixes:
+// Bug fix - @username in the middle of a sentense. Use it or make it only at the beginning?
 
 // Coming soon:
 // Temporary Block - The inverse of the Filter Mod, the messages of people added to this list will not be seen in whatever room you are chatting in.
 // Mods Menu - A Menu Panel added to the EpikChat Menu that allows you to enable and disable all mods.
-// Bug fix - @username in the middle of a sentense. Use it or make it only at the beginning?
+
 
 
 
@@ -1137,7 +1141,7 @@ document.getElementById('media').replaceChild(element, test);
 })();
 
 
-// ********************************************************************@user auto********************************************************************
+// ********************************************************************@USER AUTO********************************************************************
 
 // Variables to store user names and filtered suggestions
 let userNames = [];
@@ -1308,7 +1312,7 @@ inputElement.addEventListener('input', handleInput);
 inputElement.addEventListener('keydown', handleKeyDown);
 
 
-// ********************************************************************chat logs********************************************************************
+// ********************************************************************CHAT LOGS********************************************************************
 
 
 // Create the new <a> element
@@ -1723,6 +1727,322 @@ if (submitButton) {
   });
 }
 
+// ********************************************************************FAVORITE USERS********************************************************************
+
+
+// Key for storing starred usernames in localStorage
+const STARRED_USERNAMES_KEY = 'starredUsernames';
+
+// Function to load starred usernames from localStorage
+function loadStarredUsernames() {
+    return JSON.parse(localStorage.getItem(STARRED_USERNAMES_KEY)) || [];
+}
+
+// Function to save starred usernames to localStorage
+function saveStarredUsernames(starredUsernames) {
+    localStorage.setItem(STARRED_USERNAMES_KEY, JSON.stringify(starredUsernames));
+}
+
+// Function to handle icon click
+function handleIconClick(event) {
+    event.stopPropagation(); // Stop the event from bubbling up to the username click handler
+    event.preventDefault(); // Prevent the default action if needed
+
+    const targetIcon = event.target;
+    const userNameElement = targetIcon.closest('.user-layout, .chat-item.message').querySelector('.user-name');
+    if (userNameElement) {
+        const userName = userNameElement.textContent.trim();
+        let starredUsernames = loadStarredUsernames();
+
+        if (targetIcon.classList.contains('fa-regular')) {
+            // Change class to filled star and add to starred list
+            targetIcon.className = 'fa-solid fa-fw fa-star fav';
+            if (!starredUsernames.includes(userName)) {
+                starredUsernames.push(userName);
+            }
+        } else {
+            // Change class back to regular star and remove from starred list
+            targetIcon.className = 'fa-regular fa-fw fa-star';
+            starredUsernames = starredUsernames.filter(name => name !== userName);
+        }
+
+        // Save updated starred usernames to localStorage
+        saveStarredUsernames(starredUsernames);
+
+        // Update the cloned users container and main chat container
+        cloneStarredUsers();
+        updateIcons();
+        addStarsToChatUsers();
+        updateMessageBackgrounds();
+    }
+}
+
+// Function to get the background color from an element
+function getBackgroundColor(element) {
+    return window.getComputedStyle(element).backgroundColor;
+}
+
+// Function to simulate a click on the original node
+function simulateClickOnOriginalNode(originalNode) {
+    if (originalNode) {
+        // Create a new mouse click event
+        const clickEvent = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            view: window
+        });
+
+        // Dispatch the event on the original node
+        originalNode.dispatchEvent(clickEvent);
+    }
+}
+
+// Function to get the username from an element
+function getUsernameFromElement(element) {
+    const userNameElement = element.querySelector('.user-name');
+    return userNameElement ? userNameElement.textContent.trim() : null;
+}
+
+// Function to apply specific icon styles and spacing
+function applyIconStyles(clonedContainer, originalContainer) {
+    // Get all icon elements in the original container
+    const originalIcons = originalContainer.querySelectorAll('i');
+
+    // Get all icons in the cloned container
+    const clonedIcons = clonedContainer.querySelectorAll('i');
+
+    // Map of original icon styles
+    const iconStylesMap = new Map();
+
+    // Create a map of icon styles based on the original container
+    originalIcons.forEach(icon => {
+        const iconClass = icon.className;
+        const computedStyle = window.getComputedStyle(icon);
+        iconStylesMap.set(iconClass, {
+            color: computedStyle.color,
+            fontSize: computedStyle.fontSize,
+            margin: computedStyle.margin,
+            padding: computedStyle.padding,
+            // Add other styles if needed
+        });
+    });
+
+    // Apply styles to the icons in the cloned container
+    clonedIcons.forEach(icon => {
+        const iconClass = icon.className;
+        const styles = iconStylesMap.get(iconClass);
+        if (styles) {
+            icon.style.color = styles.color;
+            icon.style.fontSize = styles.fontSize;
+            icon.style.margin = styles.margin;
+            icon.style.padding = styles.padding;
+            // Apply other styles if needed
+        }
+    });
+}
+
+// Function to update star icons in the cloned container
+function updateStarIconsInClonedContainer() {
+    const clonedContainer = document.querySelector("#clonedContainer");
+    const starredUsernames = loadStarredUsernames();
+
+    if (clonedContainer) {
+        Array.from(clonedContainer.children).forEach(child => {
+            const userName = getUsernameFromElement(child);
+            if (userName) {
+                const starIcon = child.querySelector('.fa-star');
+                if (starIcon) {
+                    starIcon.className = starredUsernames.includes(userName) ? 'fa-solid fa-fw fa-star fav' : 'fa-regular fa-fw fa-star';
+                }
+            }
+        });
+    }
+}
+
+// Function to clone the #usersLC container with starred users only
+function cloneStarredUsers() {
+    const usersLC = document.querySelector("#usersLC");
+
+    if (usersLC) {
+        // Load the starred usernames from localStorage
+        const starredUsernames = loadStarredUsernames();
+
+        // Check if the cloned container already exists
+        let clonedContainer = document.querySelector("#clonedContainer");
+
+        if (!clonedContainer) {
+            // Clone the entire #usersLC element
+            clonedContainer = usersLC.cloneNode(false); // Shallow clone to avoid copying child nodes
+
+            // Get the background color of the original container
+            const originalBackgroundColor = getBackgroundColor(usersLC);
+
+            // Set the background color of the cloned container to match the original
+            clonedContainer.style.backgroundColor = originalBackgroundColor;
+            clonedContainer.style.position = 'relative'; // Ensure the container is positioned correctly
+            clonedContainer.style.overflow = 'auto'; // Allow scrolling if content overflows
+            clonedContainer.style.border = 'none'; // Remove any border
+            clonedContainer.style.padding = '0'; // Remove any padding
+            clonedContainer.style.margin = '0'; // Remove any margin
+            clonedContainer.style.boxShadow = 'none'; // Remove any box shadow
+            clonedContainer.style.visibility = 'visible'; // Ensure visibility
+            clonedContainer.style.opacity = '1'; // Ensure full opacity
+            clonedContainer.style.zIndex = '9999'; // Ensure it's above other elements if necessary
+            clonedContainer.id = 'clonedContainer'; // Add an ID for reference
+
+            // Insert the cloned container as a sibling above #usersLC
+            usersLC.parentNode.insertBefore(clonedContainer, usersLC);
+        }
+
+        // Remove all children from the cloned container
+        while (clonedContainer.firstChild) {
+            clonedContainer.removeChild(clonedContainer.firstChild);
+        }
+
+        // Filter and clone nodes based on starred usernames
+        Array.from(usersLC.children).forEach(child => {
+            const userName = getUsernameFromElement(child);
+            if (starredUsernames.includes(userName)) {
+                // Clone and append the matching node to the cloned container
+                const clonedNode = child.cloneNode(true);
+                clonedContainer.appendChild(clonedNode);
+
+                // Apply icon styles
+                applyIconStyles(clonedContainer, usersLC);
+
+                // Attach the existing click event handler to the star icon in the cloned container
+                const starIcon = clonedNode.querySelector('.fa-star');
+                if (starIcon) {
+                    starIcon.addEventListener('click', handleIconClick);
+                }
+
+                // Store the reference to the original node
+                clonedNode.dataset.originalNodeId = userName;
+
+                // Add click event listener to the cloned container to simulate a click on the original node
+                clonedContainer.addEventListener('click', (event) => {
+                    const clickedElement = event.target.closest('[data-original-node-id]');
+                    if (clickedElement) {
+                        const originalNodeId = clickedElement.dataset.originalNodeId;
+                        const originalNode = Array.from(usersLC.children).find(child => getUsernameFromElement(child) === originalNodeId);
+                        simulateClickOnOriginalNode(originalNode);
+                    }
+                });
+            }
+        });
+
+        // Ensure initial stars are correctly applied
+        updateStarIconsInClonedContainer();
+    }
+}
+
+// Function to update icons for existing children
+function updateIcons() {
+    const parentElement = document.querySelector("#usersLC");
+    if (parentElement) {
+        const starredUsernames = loadStarredUsernames();
+
+        Array.from(parentElement.children).forEach(child => {
+            const headerDiv = child.querySelector('.header');
+            if (headerDiv) {
+                const userNameElement = headerDiv.querySelector('.user-name');
+                if (userNameElement) {
+                    const userName = userNameElement.textContent.trim();
+
+                    let iconElement = headerDiv.previousElementSibling;
+                    if (!iconElement || !iconElement.classList.contains('fa-star')) {
+                        iconElement = document.createElement('i');
+                        iconElement.className = 'fa-regular fa-fw fa-star';
+                        iconElement.style.marginRight = '8px';
+                        iconElement.style.display = 'inline-block';
+                        iconElement.style.verticalAlign = 'middle';
+
+                        iconElement.addEventListener('click', handleIconClick);
+                        headerDiv.parentNode.insertBefore(iconElement, headerDiv);
+                    }
+
+                    iconElement.className = starredUsernames.includes(userName) ? 'fa-solid fa-fw fa-star fav' : 'fa-regular fa-fw fa-star';
+                }
+            }
+        });
+    }
+}
+
+// Function to add stars to chat users
+function addStarsToChatUsers() {
+    const starredUsernames = loadStarredUsernames();
+    const messagesContainer = document.querySelector("#messagesLC");
+
+    if (messagesContainer) {
+        Array.from(messagesContainer.children).forEach(child => {
+            const userName = getUsernameFromElement(child);
+            if (userName) {
+                let starIcon = child.querySelector('.fa-star');
+                if (!starIcon) {
+                    starIcon = document.createElement('i');
+                    starIcon.className = 'fa-regular fa-fw fa-star';
+                    starIcon.style.marginRight = '8px';
+                    starIcon.style.display = 'inline-block';
+                    starIcon.style.verticalAlign = 'middle';
+
+                    starIcon.addEventListener('click', handleIconClick);
+                    child.insertBefore(starIcon, child.firstChild);
+                }
+
+                starIcon.className = starredUsernames.includes(userName) ? 'fa-solid fa-fw fa-star fav' : 'fa-regular fa-fw fa-star';
+            }
+        });
+    }
+}
+
+// Function to update the message background colors
+function updateMessageBackgrounds() {
+    const starredUsernames = loadStarredUsernames();
+    const messagesContainer = document.querySelector("#messagesLC");
+
+    if (messagesContainer) {
+        Array.from(messagesContainer.children).forEach(child => {
+            const userName = getUsernameFromElement(child);
+            if (userName && starredUsernames.includes(userName)) {
+                child.style.backgroundColor = '#4E4E4E'; // Apply background color
+            } else {
+                child.style.backgroundColor = ''; // Reset background color
+            }
+        });
+    }
+}
+
+// Initialize everything on page load
+document.addEventListener("DOMContentLoaded", () => {
+    cloneStarredUsers();
+    updateIcons();
+    addStarsToChatUsers();
+    updateMessageBackgrounds();
+});
+
+// Monitor for changes in the #usersLC container
+const userListObserver = new MutationObserver(() => {
+    updateIcons();
+    cloneStarredUsers();
+    addStarsToChatUsers();
+    updateMessageBackgrounds();
+});
+
+const usersLC = document.querySelector("#usersLC");
+if (usersLC) {
+    userListObserver.observe(usersLC, { childList: true, subtree: true });
+}
+
+// Monitor for changes in the #messagesLC container
+const messagesObserver = new MutationObserver(() => {
+    addStarsToChatUsers();
+    updateMessageBackgrounds();
+});
+
+const messagesLC = document.querySelector("#messagesLC");
+if (messagesLC) {
+    messagesObserver.observe(messagesLC, { childList: true, subtree: true });
+}
 
 
 CLOUD = await require('cloud');
