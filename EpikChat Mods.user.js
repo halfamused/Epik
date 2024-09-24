@@ -2,7 +2,7 @@
 // @name         EpikChat Mods
 // @namespace    http://tampermonkey.net/
 // @version      2024-09-01
-// @description  v1.03
+// @description  v1.05
 // @author       half_amused
 // @match        https://www.epikchat.com/chat
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=epikchat.com
@@ -12,23 +12,709 @@
 // ==/UserScript==
 
 // Mods list:
+// Mod Settings - New menus to enable or disable the mods and choose settings for some of them. 
+// Translate My Messages - Allows you to translate your messages in real time to the language chosen in the dropdown menu.
+// Room Translations - Allows you to translate posts in the room by clicking them and clicking the globe icon (just like you would with the reply icon).
 // Filter Mod - Allows you to filter whatever room you are in by partial usernames separated by commas. You will only see messages from the people on the list. Delete the list to return chat to normal.
 // Imgur - Opens normal Imgur share links without going to a new tab.
 // Volme - Changes volume scale from 1:100 to 1:1000 (for those really loud mics that are still too loud after turning them all the way down).
 // Games - Adds the Game window where game share links can be entered to game with friends without leaving chat. (Replaces Popular Rooms and Doodles in the Side Bar).
-// Score Card - Adds an interactive whiteboard to manually keep scores in certain games, gives things a more natural game night feel (Replaces Media Tab in the Side Bar).
 // Multivid Popup - Allows you to open multiple free floating cam windows. They are restricted to the chat window. You can still open a single picture-in-picture window by right clicking a cam, which is not restricted to the chat window.
 // @username Autosuggestion - Creates an autosuggestion list when you  type @ and begin typing a , you can click on a name from the list or use tab to choose the top name on the list.
-// Chat Logs - (Requires DominantStranger's EpickChat enhancements which you can get here: https://dl.fifo.stream/epik/epik.user.js)
-// Favorite Users - Allows you to favorite users the same way you can with rooms. Favorite users will appear at the top of the user list and their posts will be highlighted in chat.
+// Favorite Users - Allows you to favorite users the same way you can with rooms. Favorite users will appear at the top of the user list and their posts will be highlighted in chat with a color you choose in the Mod Settings.
 
-// Completed Bug fixes:
-// Bug fix - @username in the middle of a sentense. Use it or make it only at the beginning?
 
 // Coming soon:
 // Temporary Block - The inverse of the Filter Mod, the messages of people added to this list will not be seen in whatever room you are chatting in.
-// Mods Menu - A Menu Panel added to the EpikChat Menu that allows you to enable and disable all mods.
+// Dictionary Module - A dictionary module in the Side Bar to help you understand words you don't know.
+// Thesaurus Module - A thesaurus module in the Side Bar to help you find that word that is right on the tip of your tongue.
 
+
+// ********************************************************************CUSTOM MENU********************************************************************
+
+(function() {
+    'use strict';
+
+    // Function to create the input box and POST button
+    function createQuickShareControls() {
+        // Create the input box
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = 'inputurl';
+        input.placeholder = 'QUICKSHARE URL';
+        input.style.marginRight = '5px'; // Add some space between the input and button
+
+        // Create the "POST" button
+        const setButton2 = document.createElement('button');
+        setButton2.className = 'badge';
+        setButton2.textContent = 'POST';
+        setButton2.addEventListener('click', function() {
+            const inputurl = document.getElementById('inputurl');
+            cApp.t_me(inputurl.value); // Assuming `cApp.t_me` is a function defined elsewhere
+        });
+
+        // Create a container for the input and button
+        const quickShareContainer = document.createElement('div');
+        quickShareContainer.style.display = 'flex';
+        quickShareContainer.style.alignItems = 'center';
+
+        // Append input and button to the container
+        quickShareContainer.appendChild(input);
+        quickShareContainer.appendChild(setButton2);
+
+        // Select the target location for appending the quick share controls
+        const targetLocation = document.querySelector("#navbar > div > div.navbar-header > a");
+        if (targetLocation) {
+            targetLocation.parentNode.insertBefore(quickShareContainer, targetLocation.nextSibling);
+        }
+    }
+
+    // Call the function to create and place the controls
+    createQuickShareControls();
+})();
+
+
+
+(function() {
+    'use strict';
+
+    function createCustomControls() {
+        // Create and configure the main div
+        const newDiv = document.createElement('div');
+        newDiv.style.margin = '0px'; // Set margin for spacing
+
+        // Create the single input box
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = '';
+        input.placeholder = 'SHARED GAME LINK HERE';
+        input.style.width = '285px';
+
+        // Create the "SET" button
+        const setButton = document.createElement('button');
+        setButton.className = 'badge';
+        setButton.textContent = 'SET';
+        setButton.style.marginLeft = '5px'; // Add some space between the input and buttons
+        setButton.addEventListener('click', () => {
+            const iframe = document.querySelector('#epikgame'); // Assuming the iframe ID is #epikgame
+            if (iframe) {
+                iframe.src = input.value; // Set the iframe src to the input value
+            }
+        });
+
+        // Create a container for the input and both buttons
+        const inputContainer = document.createElement('div');
+        inputContainer.style.display = 'flex';
+        inputContainer.style.alignItems = 'center';
+        inputContainer.style.marginBottom = '10px'; // Add spacing between elements
+        inputContainer.className = 'btn-group list-search';
+
+        // Append input and both buttons to the container
+        inputContainer.appendChild(input);
+        inputContainer.appendChild(setButton);
+
+        // Create the "Game Visibility:" label
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'name';
+        nameDiv.textContent = '   Game Visibility:';
+
+        // Create the toggle button for game visibility
+        const toggleButton = document.createElement('button');
+        toggleButton.className = 'badge';
+        toggleButton.textContent = 'SHOW';
+        toggleButton.addEventListener('click', () => {
+            const gameDiv = document.querySelector('#gamediv');
+            if (gameDiv) {
+                if (gameDiv.style.display === 'none' || gameDiv.style.display === '') {
+                    gameDiv.style.display = 'block';
+                    toggleButton.textContent = 'HIDE';
+                } else {
+                    gameDiv.style.display = 'none';
+                    toggleButton.textContent = 'SHOW';
+                }
+            }
+        });
+
+        // Create a container for the "Game Visibility:" label and toggle button
+        const visibilityContainer = document.createElement('div');
+        visibilityContainer.style.display = 'flex';
+        visibilityContainer.style.alignItems = 'center';
+        visibilityContainer.style.justifyContent = 'space-between'; // Align items to the edges
+
+
+        // Create the dropdown for game links
+        const dropdownContainer = document.createElement('div');
+        const dropdown = document.createElement('select');
+        dropdown.id = 'game-links-dropdown';
+        dropdown.className = 'custom-select custom-select-sm multi-input';
+        dropdown.style.marginTop = '8px';
+        dropdown.style.width = '220px';
+
+        // Add options to the dropdown
+        const options = [
+            { value: '', text: 'Select a game...' },
+            { value: 'https://skribbl.io/', text: 'Skribbl.io' },
+            { value: 'https://buddyboardgames.com/connect4', text: 'Connect 4' },
+            { value: 'https://picturecards.online/static/index.html', text: 'Cards Against Humanity' },
+            { value: 'https://playingcards.io/kr3pdh', text: 'DIY Dominos' },
+            { value: 'https://playingcards.io/fap9wv', text: 'DIY Cards' },
+            { value: 'https://richup.io/', text: 'Monopoly' },
+        ];
+
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = option.value;
+            opt.textContent = option.text;
+            dropdown.appendChild(opt);
+        });
+
+        // Add event listener to update iframe on selection change
+        dropdown.addEventListener('change', function() {
+            const iframe = document.querySelector('#epikgame'); // Ensure the iframe exists
+            iframe.src = dropdown.value; // Set the src to the selected link
+        });
+
+        // Append the dropdown to its container
+        dropdownContainer.appendChild(dropdown);
+
+// First, retrieve the favoriteUsernames array from localStorage (assuming it's stored as a JSON string)
+let favoriteUsernames = JSON.parse(localStorage.getItem('starredUsernames')) || [];
+
+// Retrieve or initialize the starredUserColors object from localStorage
+let starredUserColors = JSON.parse(localStorage.getItem('starredUserColors')) || {};
+
+// Assign default color (#545454) to any favorite username that doesn't have a color
+favoriteUsernames.forEach(username => {
+    if (!starredUserColors[username]) {
+        starredUserColors[username] = '#545454';
+    }
+});
+
+// Load starredUsernames from localStorage
+const loadedStarredUsernames = JSON.parse(localStorage.getItem('starredUsernames')) || [];
+//const starredUserColors = JSON.parse(localStorage.getItem('starredUserColors')) || {}; // Assuming this is defined too
+
+// Create the container for the dropdown and action elements
+const usernameDropdownContainer = document.createElement('div');
+usernameDropdownContainer.style.marginBottom = '10px'; // Spacing below the dropdown
+usernameDropdownContainer.style.display = 'flex';
+usernameDropdownContainer.style.flexDirection = 'column'; // Stack elements vertically
+
+// Create the dropdown for favorite usernames
+const usernameDropdown = document.createElement('select');
+usernameDropdown.id = 'favorite-usernames-dropdown';
+usernameDropdown.className = 'custom-select custom-select-sm multi-input';
+usernameDropdown.style.width = '220px';
+
+// Add a default option
+const defaultOption = document.createElement('option');
+defaultOption.value = '';
+defaultOption.textContent = 'Favorite User Background Color';
+usernameDropdown.appendChild(defaultOption);
+
+// Function to update the dropdown options
+function updateDropdown() {
+    // Clear existing options
+    usernameDropdown.innerHTML = '';
+
+    // Create and add the default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'Favorite User Background Color';
+    usernameDropdown.appendChild(defaultOption);
+
+    // Load the latest starredUsernames from localStorage
+    const loadedStarredUsernames = JSON.parse(localStorage.getItem('starredUsernames')) || [];
+
+    // Populate the dropdown with loadedStarredUsernames
+    loadedStarredUsernames.forEach(username => {
+        const option = document.createElement('option');
+        option.value = username;
+        option.textContent = username;
+        usernameDropdown.appendChild(option);
+    });
+}
+
+
+
+
+
+// Initial population of the dropdown
+updateDropdown();
+
+// Create a container for the action elements
+const actionContainer = document.createElement('div');
+actionContainer.style.display = 'flex';
+actionContainer.style.alignItems = 'center';
+actionContainer.style.gap = '10px'; // Space between elements
+
+// Create the close button
+const closeButton = document.createElement('button');
+closeButton.type = 'button';
+closeButton.className = 'close';
+closeButton.style.border = 'none'; // Remove default button border
+closeButton.style.background = 'none'; // Remove background
+closeButton.disabled = true; // Initially disabled
+
+// Add Font Awesome icon for the button
+const icon = document.createElement('i');
+icon.className = 'fa-solid fa-xmark'; // Font Awesome icon class
+closeButton.appendChild(icon);
+
+// Event listener for the close button
+closeButton.addEventListener('click', () => {
+    const selectedUsername = usernameDropdown.value;
+
+    console.log("Close button clicked");
+    console.log("Selected Username:", selectedUsername);
+
+    if (!selectedUsername) {
+        alert("Please select a username first.");
+        return; // Exit if no user is selected
+    }
+
+    // Load the latest starredUsernames from localStorage
+    const loadedStarredUsernames = JSON.parse(localStorage.getItem('starredUsernames')) || [];
+    console.log("Before removal:", loadedStarredUsernames); // Log before removal
+
+    // Find and remove the selected username
+    const index = loadedStarredUsernames.indexOf(selectedUsername);
+    if (index !== -1) {
+        loadedStarredUsernames.splice(index, 1); // Remove only the selected user
+        console.log(`${selectedUsername} has been removed.`);
+    } else {
+        console.log("User not found in the array."); // Log if not found
+    }
+
+    // Remove the corresponding color from starredUserColors
+    delete starredUserColors[selectedUsername];
+
+    // Update localStorage with the modified array
+    localStorage.setItem('starredUsernames', JSON.stringify(loadedStarredUsernames));
+    localStorage.setItem('starredUserColors', JSON.stringify(starredUserColors));
+
+    // Update the dropdown to reflect the changes
+    updateDropdown();
+
+    console.log("After removal:", loadedStarredUsernames); // Log after removal
+});
+
+
+
+
+
+// Update button state based on dropdown selection
+usernameDropdown.addEventListener('change', () => {
+    closeButton.disabled = usernameDropdown.value === ''; // Enable if an option is selected
+});
+
+// Create the color display
+const colorDisplay = document.createElement('div');
+colorDisplay.style.width = '20px';
+colorDisplay.style.height = '20px';
+colorDisplay.style.border = '1px solid black';
+colorDisplay.style.backgroundColor = '#545454'; // Default color
+
+// Append elements to the action container
+actionContainer.appendChild(document.createTextNode('Remove User'));
+actionContainer.appendChild(closeButton);
+actionContainer.appendChild(document.createTextNode('Background:'));
+actionContainer.appendChild(colorDisplay);
+
+// Append dropdown and action container to the main container
+usernameDropdownContainer.appendChild(usernameDropdown);
+usernameDropdownContainer.appendChild(actionContainer);
+
+// Finally, append the main container to the document body
+document.body.appendChild(usernameDropdownContainer);
+
+
+// Create the canvas element for color picking
+const canvas = document.createElement('canvas');
+canvas.width = 280;
+canvas.height = 280;
+canvas.style.position = 'fixed'; // Make it float over the page
+canvas.style.zIndex = '10000'; // Ensure it's above all other elements
+canvas.style.display = 'none';  // Hide the canvas on load
+
+
+
+// Set up the canvas drawing context
+const ctx = canvas.getContext('2d');
+
+// Create horizontal color gradient (red-green-blue-red)
+const gradientX = ctx.createLinearGradient(0, 0, canvas.width, 0);
+gradientX.addColorStop(0, 'red');
+gradientX.addColorStop(0.33, 'green');
+gradientX.addColorStop(0.66, 'blue');
+gradientX.addColorStop(1, 'red');
+ctx.fillStyle = gradientX;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// Create vertical white-transparent-black gradient
+const gradientY = ctx.createLinearGradient(0, 0, 0, canvas.height);
+gradientY.addColorStop(0, 'white');
+gradientY.addColorStop(0.5, 'transparent');
+gradientY.addColorStop(1, 'black');
+ctx.fillStyle = gradientY;
+ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+// Function to convert RGB to HEX
+function rgbToHex(rgb) {
+    const rgbValues = rgb.match(/\d+/g); // Extract numeric values from RGB
+    return `#${((1 << 24) + (parseInt(rgbValues[0]) << 16) + (parseInt(rgbValues[1]) << 8) + parseInt(rgbValues[2])).toString(16).slice(1).toUpperCase()}`;
+}
+
+// Function to get color from canvas at clicked position
+function getColorAtPosition(x, y) {
+    const pixel = ctx.getImageData(x, y, 1, 1).data;
+    return `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+}
+
+// Show canvas when the colorDisplay is clicked
+colorDisplay.addEventListener('click', () => {
+    if (usernameDropdown.value) {
+        canvas.style.display = 'block'; // Show the canvas if a user is selected
+    } else {
+        alert("Please select a username first.");
+    }
+});
+
+// Update color display and localStorage, then hide canvas when color is selected
+canvas.addEventListener('click', (event) => {
+    const x = event.offsetX;
+    const y = event.offsetY;
+    const selectedColor = getColorAtPosition(x, y);
+    colorDisplay.style.backgroundColor = selectedColor;
+
+    // Convert RGB to HEX before saving
+    const hexColor = rgbToHex(selectedColor);
+
+    // Get the currently selected user
+    const selectedUsername = usernameDropdown.value;
+    if (selectedUsername) {
+        // Update the color for the selected user in the starredUserColors object
+        starredUserColors[selectedUsername] = hexColor;
+        // Save the updated colors to localStorage
+        localStorage.setItem('starredUserColors', JSON.stringify(starredUserColors));
+    }
+
+    canvas.style.display = 'none'; // Hide the canvas after color is chosen
+});
+
+// When a username is selected from the dropdown, update the color display
+usernameDropdown.addEventListener('change', function() {
+    const selectedUsername = usernameDropdown.value;
+    if (selectedUsername) {
+        // Update the colorDisplay to the user's current color in localStorage
+        colorDisplay.style.backgroundColor = starredUserColors[selectedUsername];
+    } else {
+        colorDisplay.style.backgroundColor = '#545454'; // Default color if no user selected
+    }
+});
+
+        // Create the new <li> element for "Favorite Users"
+const newLi = document.createElement('li');
+newLi.className = 'list-group-item';
+newLi.innerHTML = `
+  Favorite Users
+  <input type="checkbox" id="mod2" class="switch-input" style="display:none;" />
+  <label for="mod2" class="switch-label pull-right"></label>
+`;
+        // Append all containers to the new div
+        newDiv.appendChild(inputContainer);
+        newDiv.appendChild(visibilityContainer);
+        newDiv.appendChild(dropdownContainer); // Add the dropdown to the main div
+        newDiv.appendChild(newLi);
+        newDiv.appendChild(usernameDropdownContainer);
+        newDiv.appendChild(canvas);
+
+
+        return newDiv; // Return the complete custom controls
+    }
+
+    function initializeModSettings() {
+        // Create the new <li> element for Mod Settings
+        const newModLink = document.createElement('li');
+        newModLink.setAttribute('role', 'tooltip');
+        newModLink.setAttribute('aria-label', 'Mod Settings');
+        newModLink.setAttribute('data-microtip-position', 'bottom');
+
+        const modLinkDiv = document.createElement('div');
+        modLinkDiv.setAttribute('data-toggle', 'modal');
+        modLinkDiv.setAttribute('data-target', '#chatSettings_modal');
+        modLinkDiv.className = '';
+
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-cogs';
+        modLinkDiv.appendChild(icon);
+
+        newModLink.appendChild(modLinkDiv);
+
+        // Prevent the default click action
+        modLinkDiv.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevents the default action of the <a> element
+        });
+
+        // Select the target container for adding new links
+        const targetContainer = document.querySelector("#navbar > div > div.navbar-header > ul");
+
+        // Check if the target container is found
+        if (targetContainer) {
+            // Append the new <li> element to the target container
+            targetContainer.appendChild(newModLink);
+        }
+
+        // Create the new <div> element with the specified HTML structure for Mod Settings
+const newModContent = document.createElement('div');
+newModContent.className = 'modal-content mod-settings-content'; // New unique class
+newModContent.style.display = 'none'; // Set initial display to none
+newModContent.innerHTML = `
+  <div class="modal-header">
+    <h4 class="modal-title">
+      Mod Settings
+      <button type="button" class="close" data-dismiss="modal"><i class="fa-solid fa-xmark"></i></button>
+    </h4>
+  </div>
+  <div class="modal-body">
+    <ul class="list-group">
+      <li class="list-group-item">
+        Filter Chat by Usernames
+        <input type="checkbox" id="mod1" class="switch-input" style="display:none;" />
+        <label for="mod1" class="switch-label pull-right"></label>
+      </li>
+      <!-- Omit the Favorite Users <li> here -->
+      <li class="list-group-item">
+        Translate My Messages
+        <input type="checkbox" id="mod3" class="switch-input" style="display:none;" />
+        <label for="mod3" class="switch-label pull-right"></label>
+      </li>
+      <li class="list-group-item">
+        Room Translations
+        <input type="checkbox" id="mod4" class="switch-input" style="display:none;" />
+        <label for="mod4" class="switch-label pull-right"></label>
+      </li>
+      <li class="list-group-item">
+        Placeholder 4
+        <input type="checkbox" id="mod5" class="switch-input" style="display:none;" />
+        <label for="mod5" class="switch-label pull-right"></label>
+      </li>
+      <li class="list-group-item">
+        Placeholder 5
+        <input type="checkbox" id="mod6" class="switch-input" style="display:none;" />
+        <label for="mod6" class="switch-label pull-right"></label>
+      </li>
+      <li class="list-group-item">
+        Placeholder 6
+        <input type="checkbox" id="mod7" class="switch-input" style="display:none;" />
+        <label for="mod7" class="switch-label pull-right"></label>
+      </li>
+    </ul>
+  </div>
+  <!-- Add custom controls here -->
+`;
+
+// Create and append custom controls
+const customControls = createCustomControls();
+newModContent.querySelector('.modal-body').appendChild(customControls);
+
+// Select the updated target container
+const updatedTargetContainer = document.querySelector("#chatSettings_modal > div");
+
+// Check if the updated target container is found
+if (updatedTargetContainer) {
+    // Append the new <div> elements to the updated target container
+    updatedTargetContainer.appendChild(newModContent);
+}
+
+// Create the new <li> element for "Favorite Users"
+const newLi = document.createElement('li');
+newLi.className = 'list-group-item';
+newLi.innerHTML = `
+  Favorite Users
+  <input type="checkbox" id="mod2" class="switch-input" style="display:none;" />
+  <label for="mod2" class="switch-label pull-right"></label>
+`;
+
+// Now you can append `newLi` in your existing snippet where you see fit.
+
+        // Set display to none for specific elements
+        const modalContentMain = document.querySelector("#chatSettings_modal > div > div.modal-content.main");
+        const modalFooter = document.querySelector("#chatSettings_modal > div > div.modal-content.main > div.modal-footer");
+
+        if (modalContentMain) {
+            modalContentMain.style.display = 'block';
+        }
+
+        if (modalFooter) {
+            modalFooter.style.display = 'none';
+        }
+
+        // Add event listener to the back button to hide the new modal content
+        const backButtonMod = newModContent.querySelector('.section-close');
+
+        if (backButtonMod) {
+            backButtonMod.addEventListener('click', function() {
+                newModContent.style.display = 'none'; // Hide the modal content
+            });
+        }
+
+        // Add event listener to the Mod Settings button
+        modLinkDiv.addEventListener('click', function(event) {
+            event.preventDefault(); // Prevents the default action of the <a> element
+
+            // Toggle the visibility of the Mod Settings modal content
+            if (newModContent.style.display === 'none') {
+                newModContent.style.display = 'block'; // Show the modal content
+
+                // Ensure existing modal content is hidden
+                if (modalContentMain) {
+                    modalContentMain.style.display = 'none';
+                }
+            } else {
+                newModContent.style.display = 'none'; // Hide the modal content
+            }
+        });
+
+        // Ensure the settings button is not interfering
+        const settingsButton = document.querySelector('[data-toggle="modal"][data-target="#chatSettings_modal"]');
+
+        if (settingsButton) {
+            settingsButton.addEventListener('click', function() {
+                // Ensure the settings modal is shown and the Mod Settings modal contents are hidden
+                if (newModContent.style.display === 'block') {
+                    newModContent.style.display = 'none';
+                }
+            });
+        }
+
+        // Function to load saved states from localStorage
+        function loadSwitchStates() {
+            document.querySelectorAll('.switch-input').forEach(function(input) {
+                // Get the saved state from localStorage
+                const modState = localStorage.getItem(input.id);
+
+                // If there is a saved state, apply it (true = checked, false = unchecked)
+                if (modState === 'enabled') {
+                    input.checked = true;
+                    input.nextElementSibling.style.backgroundColor = 'rgb(76, 175, 80)'; // Apply 'on' style
+                } else {
+                    input.checked = false;
+                    input.nextElementSibling.style.backgroundColor = 'rgb(204, 204, 204)'; // Apply 'off' style
+                }
+            });
+        }
+
+        // Function to save the state to localStorage
+        function saveSwitchState(input) {
+            const modState = input.checked ? 'enabled' : 'disabled';
+            localStorage.setItem(input.id, modState);
+
+            // Dispatch custom event
+            const event = new CustomEvent('switchStateChanged', { detail: { id: input.id, state: modState } });
+            window.dispatchEvent(event);
+        }
+
+        // JavaScript functionality for the on/off switch
+        document.querySelectorAll('.switch-input').forEach(function(input) {
+            // Add an event listener to each switch to save the state when toggled
+            input.addEventListener('change', function() {
+                const label = input.nextElementSibling;
+
+                if (input.checked) {
+                    // Change to "on" state
+                    label.style.backgroundColor = 'rgb(76, 175, 80)';
+                } else {
+                    // Change to "off" state
+                    label.style.backgroundColor = 'rgb(204, 204, 204)';
+                }
+
+                // Save the state to localStorage
+                saveSwitchState(input);
+            });
+        });
+
+        // Load switch states on page load
+        loadSwitchStates(); // Load saved switch states
+
+        // Function to log the states of all switches to the console
+        function logSwitchStates() {
+            const switches = document.querySelectorAll('.switch-input');
+            console.log("Switch states logging initiated.");
+            if (switches.length === 0) {
+                console.log("No switches found.");
+            } else {
+                switches.forEach(function(input) {
+                    console.log(`Switch ID: ${input.id}, Checked: ${input.checked}`);
+                });
+            }
+        }
+
+        // Log switch states after they have loaded
+        logSwitchStates();
+
+        // Add event listener for custom switch state changes
+        window.addEventListener('switchStateChanged', function(event) {
+            console.log(`Custom Event - Switch ID: ${event.detail.id}, State: ${event.detail.state}`);
+        });
+    }
+
+    // Create a MutationObserver to detect when the target container is available
+    const observer = new MutationObserver(function(mutations) {
+        const targetContainer = document.querySelector("#chatSettings_modal > div > div.modal-content.main > div.modal-body.main");
+        if (targetContainer) {
+            // Stop observing once the target container is found
+            observer.disconnect();
+            initializeModSettings();
+        }
+    });
+
+    // Start observing the document for changes
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
+
+(function() {
+    'use strict';
+
+    // Function to create the toggle button for game visibility as an <li>
+    function createToggleGameVisibility() {
+        // Create the <li> element
+        const toggleLi = document.createElement('li');
+        toggleLi.setAttribute('role', 'tooltip');
+        toggleLi.setAttribute('aria-label', 'Toggle Games');
+        toggleLi.setAttribute('data-microtip-position', 'bottom');
+
+        // Create a <div> to hold the icon
+        const iconDiv = document.createElement('div');
+        iconDiv.innerHTML = '<i class="fa-solid fa-gamepad"></i>'; // Add the icon
+
+        // Append the icon <div> to the <li>
+        toggleLi.appendChild(iconDiv);
+
+        // Add click event listener for toggling game visibility
+        toggleLi.addEventListener('click', () => {
+            const gameDiv = document.querySelector('#gamediv');
+            if (gameDiv) {
+                if (gameDiv.style.display === 'none' || gameDiv.style.display === '') {
+                    gameDiv.style.display = 'block';
+                    toggleLi.setAttribute('aria-label', 'Hide Games'); // Update tooltip
+                } else {
+                    gameDiv.style.display = 'none';
+                    toggleLi.setAttribute('aria-label', 'Show Games'); // Update tooltip
+                }
+            }
+        });
+
+        // Select the target <ul> for appending
+        const targetUl = document.querySelector("#navbar > div > div.navbar-header > ul");
+        if (targetUl) {
+            targetUl.appendChild(toggleLi); // Append the new <li> to the <ul>
+        }
+    }
+
+    // Call the function to create and place the toggle button
+    createToggleGameVisibility();
+})();
 
 
 
@@ -82,7 +768,7 @@ if (targetElement) {
     // Create the input box
     filterInput = document.createElement("input");
     filterInput.type = "text";
-    filterInput.class = "search";
+    filterInput.className = "search"; // Use className instead of class
     filterInput.placeholder = "Filter by Username (CSV)";
     filterInput.style.position = "absolute"; // Position it absolutely
     filterInput.style.left = "20px"; // Align to the right of the container
@@ -97,6 +783,7 @@ if (targetElement) {
     // Add event listener to filter nodes inside #messagesLC based on textbox input
     filterInput.addEventListener("input", function() {
         updateMessageVisibility();
+        saveFilterToLocalStorage(); // Save filter text to localStorage
     });
 
     // Make sure filterInput is accessible globally
@@ -120,96 +807,140 @@ if (targetNode) {
     observerInstance.observe(targetNode, config);
 }
 
+// Function to initialize filter state from localStorage
+function initializeFilterState() {
+    const mod1State = localStorage.getItem('mod1');
+    const savedFilter = localStorage.getItem('filterText');
+
+    if (mod1State === 'disabled') {
+        filterInput.disabled = true; // Disable the filter input
+        filterInput.style.display = 'none'; // Hide the filter input box
+        filterInput.value = ''; // Optionally clear the filter
+    } else {
+        filterInput.disabled = false; // Enable the filter input
+        filterInput.style.display = 'block'; // Show the filter input box
+        if (savedFilter) {
+            filterInput.value = savedFilter; // Restore saved filter value
+        }
+    }
+
+    updateMessageVisibility(); // Update message visibility based on the current filter
+}
+
+// Save the filter value to localStorage on change
+function saveFilterToLocalStorage() {
+    localStorage.setItem('filterText', filterInput.value.trim());
+}
+
+// Initialize the filter state
+initializeFilterState();
+
+// Add event listener for custom switch state changes
+window.addEventListener('switchStateChanged', function(event) {
+    if (event.detail.id === 'mod1') {
+        if (event.detail.state === 'enabled') {
+            filterInput.disabled = false; // Enable the filter input
+            filterInput.style.display = 'block'; // Show the filter input box
+            updateMessageVisibility(); // Ensure messages are visible according to the filter
+            console.log("Filter Mod1 is now enabled.");
+        } else {
+            filterInput.disabled = true; // Disable the filter input
+            filterInput.style.display = 'none'; // Hide the filter input box
+            filterInput.value = ''; // Optionally clear the filter
+            updateMessageVisibility(); // Ensure messages are visible according to the filter
+            console.log("Filter Mod1 is now disabled.");
+        }
+    }
+});
+
 
 // ********************************************************************IMGUR MOD********************************************************************
 
 (function() {
     'use strict';
 
-// Function to create and append the Imgur embed
-function appendImgurEmbed(imgurId) {
-    console.log('Appending embed for Imgur ID:', imgurId);
+    // Function to create and append the Imgur embed
+    function appendImgurEmbed(imgurId, imgurHref) {
+        console.log('Appending embed for Imgur ID:', imgurId);
 
-    // Create the outermost container
-    const spotlightDiv = document.createElement('div');
-    spotlightDiv.id = 'spotlight';
-    spotlightDiv.className = 'menu show';
+        // Create the outermost container
+        const spotlightDiv = document.createElement('div');
+        spotlightDiv.id = 'spotlight';
+        spotlightDiv.className = 'menu show';
 
-    // Create spinner element
-    const spinnerDiv = document.createElement('div');
-    spinnerDiv.className = 'spl-spinner';
-    spotlightDiv.appendChild(spinnerDiv);
+        // Create spinner element
+        const spinnerDiv = document.createElement('div');
+        spinnerDiv.className = 'spl-spinner';
+        spotlightDiv.appendChild(spinnerDiv);
 
-    // Create track element
-    const trackDiv = document.createElement('div');
-    trackDiv.className = 'spl-track';
+        // Create track element
+        const trackDiv = document.createElement('div');
+        trackDiv.className = 'spl-track';
 
-    // Create scene element
-    const sceneDiv = document.createElement('div');
-    sceneDiv.className = 'spl-scene';
-    sceneDiv.style.transform = 'translateX(0%)';
+        // Create scene element
+        const sceneDiv = document.createElement('div');
+        sceneDiv.className = 'spl-scene';
+        sceneDiv.style.transform = 'translateX(0%)';
 
-    // Create pane element for the Imgur embed
-    const paneDiv = document.createElement('div');
-    paneDiv.className = 'spl-pane';
-    paneDiv.style.transition = 'none';
+        // Create pane element for the Imgur embed
+        const paneDiv = document.createElement('div');
+        paneDiv.className = 'spl-pane';
+        paneDiv.style.transition = 'none';
 
-    // Create overlay for the Imgur content
-    const imgurOverlayDiv = document.createElement('div');
-    imgurOverlayDiv.id = 'imgur-overlay';
-    imgurOverlayDiv.style.position = 'fixed';
-    imgurOverlayDiv.style.top = '50%';
-    imgurOverlayDiv.style.left = '50%';
-    imgurOverlayDiv.style.transform = 'translate(-50%, -50%) scale(1)';
-    imgurOverlayDiv.style.opacity = '1';
-    imgurOverlayDiv.style.visibility = 'visible';
-    imgurOverlayDiv.style.zIndex = '9999';
+        // Create overlay for the Imgur content
+        const imgurOverlayDiv = document.createElement('div');
+        imgurOverlayDiv.id = 'imgur-overlay';
+        imgurOverlayDiv.style.position = 'fixed';
+        imgurOverlayDiv.style.top = '50%';
+        imgurOverlayDiv.style.left = '50%';
+        imgurOverlayDiv.style.transform = 'translate(-50%, -50%) scale(1)';
+        imgurOverlayDiv.style.opacity = '1';
+        imgurOverlayDiv.style.visibility = 'visible';
+        imgurOverlayDiv.style.zIndex = '9999';
 
-    // Create a blockquote element for the Imgur embed
-    const imgurBlockquote = document.createElement('blockquote');
-    imgurBlockquote.className = 'imgur-embed-pub';
-    imgurBlockquote.lang = 'en';
-    imgurBlockquote.setAttribute('data-id', `a/${imgurId}`);
-    imgurBlockquote.innerHTML = `<a href="//imgur.com/a/${imgurId}"></a>`;
+        // Create a blockquote element for the Imgur embed
+        const imgurBlockquote = document.createElement('blockquote');
+        imgurBlockquote.className = 'imgur-embed-pub';
+        imgurBlockquote.lang = 'en';
+        imgurBlockquote.setAttribute('data-id', `a/${imgurId}`);
+        imgurBlockquote.innerHTML = `<a href="//imgur.com/${imgurHref}"></a>`;
 
-    // Create an invisible overlay to handle clicks
-    const clickOverlay = document.createElement('div');
-    clickOverlay.style.position = 'absolute';
-    clickOverlay.style.top = '0';
-    clickOverlay.style.left = '0';
-    clickOverlay.style.width = '100%';
-    clickOverlay.style.height = '100%';
-    clickOverlay.style.zIndex = '1000';
-    clickOverlay.style.cursor = 'pointer';
-    clickOverlay.onclick = () => {
-        // Open the original Imgur link in a new tab
-        window.open(`//imgur.com/a/${imgurId}`, '_blank');
-    };
+        // Create an invisible overlay to handle clicks
+        const clickOverlay = document.createElement('div');
+        clickOverlay.style.position = 'absolute';
+        clickOverlay.style.top = '0';
+        clickOverlay.style.left = '0';
+        clickOverlay.style.width = '100%';
+        clickOverlay.style.height = '100%';
+        clickOverlay.style.zIndex = '1000';
+        clickOverlay.style.cursor = 'pointer';
+        clickOverlay.onclick = () => {
+            // Open the original Imgur link in a new tab
+            window.open(`//imgur.com/${imgurHref}`, '_blank');
+        };
 
-    // Append the click overlay to the imgurOverlayDiv
-    imgurOverlayDiv.appendChild(clickOverlay);
+        // Append the click overlay to the imgurOverlayDiv
+        imgurOverlayDiv.appendChild(clickOverlay);
 
-    // Append blockquote to the overlay
-    imgurOverlayDiv.appendChild(imgurBlockquote);
-    paneDiv.appendChild(imgurOverlayDiv);
-    sceneDiv.appendChild(paneDiv);
-    trackDiv.appendChild(sceneDiv);
-    spotlightDiv.appendChild(trackDiv);
+        // Append blockquote to the overlay
+        imgurOverlayDiv.appendChild(imgurBlockquote);
+        paneDiv.appendChild(imgurOverlayDiv);
+        sceneDiv.appendChild(paneDiv);
+        trackDiv.appendChild(sceneDiv);
+        spotlightDiv.appendChild(trackDiv);
 
-    // Append the spotlight div to the body
-    document.body.appendChild(spotlightDiv);
+        // Append the spotlight div to the body
+        document.body.appendChild(spotlightDiv);
 
-    // Create the script element to load Imgur's embed.js
-    const script = document.createElement('script');
-    script.src = '//s.imgur.com/min/embed.js';
-    script.charset = 'utf-8';
-    script.async = true;
+        // Create the script element to load Imgur's embed.js
+        const script = document.createElement('script');
+        script.src = '//s.imgur.com/min/embed.js';
+        script.charset = 'utf-8';
+        script.async = true;
 
-    // Append the script to the spotlight div to load the Imgur embed script
-    spotlightDiv.appendChild(script);
-}
-
-
+        // Append the script to the spotlight div to load the Imgur embed script
+        spotlightDiv.appendChild(script);
+    }
 
     // Function to create and append the comments overlay
     function appendCommentsOverlay() {
@@ -314,20 +1045,34 @@ function appendImgurEmbed(imgurId) {
         const target = event.target.closest('a');
 
         // Ensure we're dealing with a link element and prevent default action
-        if (target && target.href.includes('imgur.com/a/')) {
+        if (target && target.href.includes('imgur.com')) {
             event.preventDefault(); // Prevent the default link behavior
             event.stopImmediatePropagation(); // Stop other listeners from running
 
             console.log('Clicked link:', target.href);
 
-            // Get the Imgur album ID from the URL
-            const imgurId = target.href.split('/a/')[1].split('?')[0];
+            // Extract the full URL for href
+            const url = new URL(target.href);
+            const pathname = url.pathname; // Get the path after imgur.com/
 
-            // Log the Imgur ID to the console
-            console.log('Imgur ID:', imgurId);
+            // Extract everything after imgur.com/
+            let imgurHref = pathname.replace(/^\//, ''); // Remove leading '/'
+
+            // Remove any trailing query parameters or fragments from href
+            imgurHref = imgurHref.split(/[?#]/)[0];
+
+            // Process for data-id
+            let imgurId = imgurHref.split('/').pop(); // Take the last segment of the path
+
+            // Remove unwanted segments for data-id
+            imgurId = imgurId.split(/[?#]/)[0];
+
+            // Log the Imgur ID and href for debugging
+            console.log('Imgur ID for data-id:', imgurId);
+            console.log('Imgur Href:', imgurHref);
 
             // Append the Imgur embed
-            appendImgurEmbed(imgurId);
+            appendImgurEmbed(imgurId, imgurHref); // Pass both imgurId and imgurHref
 
             // Append the comments overlay
             appendCommentsOverlay();
@@ -338,6 +1083,7 @@ function appendImgurEmbed(imgurId) {
     document.addEventListener('click', handleImgurLinkClick, true);
 
 })();
+
 
 
 // ********************************************************************VOLUME MOD********************************************************************
@@ -380,6 +1126,7 @@ function appendImgurEmbed(imgurId) {
     document.querySelectorAll('.vol-control').forEach(updateStepAttribute);
 })();
 
+
 // ********************************************************************GAMES MOD********************************************************************
 
 
@@ -409,7 +1156,7 @@ function appendImgurEmbed(imgurId) {
         // Create the iframe inside the modal container
         const innerIframe = document.createElement('iframe');
         innerIframe.id = 'epikgame';
-        innerIframe.src = 'https://richup.io/';
+        innerIframe.src = '';
         innerIframe.style.width = '100%';
         innerIframe.style.height = '100%';
         innerIframe.style.border = 'none';
@@ -506,99 +1253,7 @@ function appendImgurEmbed(imgurId) {
     createModal();
 })();
 
-
-// Create and configure the div to replace #home-trending
-const newDiv = document.createElement('div');
-//newDiv.className = 'btn-group list-search';
-newDiv.style.margin = '7px'; // Set 10px margin on all sides
-
-// Create the input box
-const input = document.createElement('input');
-input.type = 'text';
-input.className = 'search';
-input.placeholder = 'LINK SHARED WITH YOU';
-
-// Create the "Set" button
-const setButton = document.createElement('button');
-setButton.className = 'badge';
-setButton.textContent = 'SET';
-setButton.addEventListener('click', () => {
-    const iframe = document.querySelector('#epikgame');
-    if (iframe) {
-        iframe.src = input.value;
-    }
-});
-
-// Create a container for the input and set button
-const inputContainer = document.createElement('div');
-inputContainer.style.display = 'flex';
-inputContainer.style.alignItems = 'center';
-
-// Append input and set button to the container
-inputContainer.appendChild(input);
-inputContainer.appendChild(setButton);
-
-// Create clones of the input and button
-// Create the input box
-const input2 = document.createElement('input');
-input2.type = 'text';
-input2.className = 'search';
-input2.placeholder = 'POST LINK IN CHAT';
-
-// Create the "Set" button
-const setButton2 = document.createElement('button');
-var msg = input2.value
-setButton2.className = 'badge';
-setButton2.textContent = 'POST';
-setButton2.addEventListener('click', function() {
-        cApp.t_me(input2.value);
-});
-
-// Create a container for the cloned input and button
-const clonedInputContainer = document.createElement('div');
-clonedInputContainer.style.display = 'flex';
-clonedInputContainer.style.alignItems = 'center';
-
-// Append cloned input and button to the container
-clonedInputContainer.appendChild(input2);
-clonedInputContainer.appendChild(setButton2);
-
-// Create the "Game Visibility:" label
-const nameDiv = document.createElement('div');
-nameDiv.className = 'name';
-nameDiv.textContent = '   Game Visibility:';
-
-// Create the toggle button for game visibility
-const toggleButton = document.createElement('button');
-toggleButton.className = 'badge';
-toggleButton.textContent = 'SHOW';
-toggleButton.addEventListener('click', () => {
-    const gameDiv = document.querySelector('#gamediv');
-    if (gameDiv) {
-        if (gameDiv.style.display === 'none' || gameDiv.style.display === '') {
-            gameDiv.style.display = 'block';
-            toggleButton.textContent = 'HIDE';
-        } else {
-            gameDiv.style.display = 'none';
-            toggleButton.textContent = 'SHOW';
-        }
-    }
-});
-
-// Create a container for the "Game Visibility:" label and toggle button
-const visibilityContainer = document.createElement('div');
-visibilityContainer.style.display = 'flex';
-visibilityContainer.style.alignItems = 'center';
-visibilityContainer.style.justifyContent = 'space-between'; // Align items to the edges
-
-// Append the "Game Visibility:" label and toggle button to the container
-visibilityContainer.appendChild(nameDiv);
-visibilityContainer.appendChild(toggleButton);
-
-// Append all containers to the new div
-newDiv.appendChild(inputContainer);
-newDiv.appendChild(clonedInputContainer);
-newDiv.appendChild(visibilityContainer);
+/*
 
 
 // Create a wrapper div for input and links
@@ -840,42 +1495,42 @@ if (gobye) {
 var style = document.createElement('style');
 style.innerHTML = `
     .custom-button {
-        color: #888888; /* Swapped text color */
-        font-size: 14px; /* Adjusted font size */
-        margin: 0px 4px; /* Margin adjusted */
-        display: inline-block; /* Display */
-        position: relative; /* Position */
-        cursor: pointer; /* Cursor */
-        background-color: #566666; /* Swapped background color */
-        border: none; /* Remove default border */
-        padding: 2px 5px; /* Adjusted padding */
-        height: 18px; /* Height adjusted */
-        line-height: 14px; /* Line height adjusted */
-        text-align: center; /* Text alignment */
-        border-radius: 5px; /* Rounded corners */
+        color: #888888;
+        font-size: 14px;
+        margin: 0px 4px;
+        display: inline-block
+        position: relative;
+        cursor: pointer;
+        background-color: #566666;
+        border: none;
+        padding: 2px 5px;
+        height: 18px
+        line-height: 14px;
+        text-align: center;
+        border-radius: 5px;
     }
     .send-button {
-        /* Styling specific to the POST URL button */
-        width: auto; /* Automatic width to fit text */
+
+        width: auto;
     }
     .custom-button:not(.send-button) {
-        /* Styling for minus and plus buttons */
-        width: 24px; /* Fixed width for consistency */
+
+        width: 24px;
     }
     .custom-button:hover {
-        background-color: #444444; /* Darker background on hover */
-        color: #888888; /* Text color on hover */
+        background-color: #444444;
+        color: #888888;
     }
     .list-item {
         display: block;
         padding: 4px 10px;
-        color: var(--list-item-text-color); /* Ensure this variable is defined in your CSS */
+        color: var(--list-item-text-color);
         text-decoration: none;
         font-weight: 500;
         height: 42px;
-        line-height: 42px; /* Center text vertically */
-        position: relative; /* Ensure the overlay is positioned relative to the link */
-        transition: background-color 0.2s ease; /* Smooth transition for background color */
+        line-height: 42px;
+        position: relative;
+        transition: background-color 0.2s ease;
     }
     .text-overlay {
         position: absolute;
@@ -883,22 +1538,23 @@ style.innerHTML = `
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(255, 255, 255, 0); /* Fully transparent background */
-        cursor: pointer; /* Pointer cursor */
-        z-index: 10; /* Ensure it appears above the text */
-        /* No margin, padding, or borders to avoid shifting */
+        background: rgba(255, 255, 255, 0);
+        cursor: pointer;
+        z-index: 10;
+
     }
     .text-overlay:hover {
-        background: rgba(255, 255, 255, 0); /* Maintain transparency on overlay hover */
+        background: rgba(255, 255, 255, 0);
     }
     .list-item:hover {
-        background-color: #1F2124; /* Background color of the link when hovering over the overlay */
+        background-color: #1F2124;
     }
 `;
 document.head.appendChild(style);
+*/
 
 // ********************************************************************SCORE PAD********************************************************************
-
+/*
 var element = document.createElement("div");
 element.style.position = "fixed";
 element.style.zIndex = "9999";
@@ -913,6 +1569,7 @@ element.appendChild(element2);
 
 let test = document.getElementById('media-inner');
 document.getElementById('media').replaceChild(element, test);
+*/
 
 // ********************************************************************MULTI-VID POP-UP********************************************************************
 
@@ -958,7 +1615,7 @@ document.getElementById('media').replaceChild(element, test);
         modalContainer.appendChild(videoNode);
 
         // Set initial modal size based on the aspect ratio
-        const initialWidth = videoNode.videoWidth || 640;  // Fallback to 640px width if videoWidth is not available
+        const initialWidth = videoNode.videoWidth || 640; // Fallback to 640px width if videoWidth is not available
         const initialHeight = initialWidth / aspectRatio;
         modalContainer.style.width = `${initialWidth}px`;
         modalContainer.style.height = `${initialHeight}px`;
@@ -1312,426 +1969,14 @@ inputElement.addEventListener('input', handleInput);
 inputElement.addEventListener('keydown', handleKeyDown);
 
 
-// ********************************************************************CHAT LOGS********************************************************************
-
-
-// Create the new <a> element
-const newLink = document.createElement('a');
-newLink.href = '#';  // Correct href attribute
-newLink.className = 'list-group-item m-a-0 settings-list';
-newLink.target = '_blank';  // Fixed target attribute
-
-// Create the inner content of the <a> element
-newLink.innerHTML = `
-  <i class="fas fa-fw fa-comment-alt"></i>
-  <span class="title">Chat Logs</span>
-  <i class="fas fa-fw pull-right fa-chevron-right"></i>
-`;
-
-// Prevent the default click action
-newLink.addEventListener('click', function(event) {
-  event.preventDefault(); // Prevents the default action of the <a> element
-});
-
-// Select the target container
-const targetContainer = document.querySelector("#chatSettings_modal > div > div.modal-content.main > div.modal-body.main");
-
-// Check if the target container is found
-if (targetContainer) {
-  // Append the new <a> element to the target container
-  targetContainer.appendChild(newLink);
-}
-
-// Create the new <div> element with the specified HTML structure
-const newModalContent = document.createElement('div');
-newModalContent.className = 'modal-content chat-logs-content';  // New unique class
-newModalContent.style.display = 'none';  // Set initial display to none
-
-newModalContent.innerHTML = `
-  <div class="modal-header">
-    <h4 class="modal-title">
-      <i class="fas fa-fw fa-arrow-left section-close" style="cursor:pointer; margin-right:6px;"></i>
-      Chat Logs
-    </h4>
-  </div>
-  <div class="modal-body">
-    <div class="setting">
-      <div class="setting-title">Choose 1</div>
-      <ul class="list-group" style="margin-top:10px;margin-bottom: 0;">
-        <li class="list-group-item">
-          <div class="radio custom-control custom-radio m-a-0">
-            <label>
-              Room
-              <input type="radio" name="Room" class="multi-input" data-setting="room" value="room">
-              <span class="custom-control-indicator"></span>
-            </label>
-          </div>
-        </li>
-        <li class="list-group-item">
-          <div class="radio custom-control custom-radio m-a-0">
-            <label>
-              Direct Message
-              <input type="radio" name="Room" class="multi-input" data-setting="room" value="dm">
-              <span class="custom-control-indicator"></span>
-            </label>
-          </div>
-        </li>
-      </ul>
-    </div>
-
-    <!-- New Inputs for Name and Keyword -->
-    <div class="setting" style="margin-top:20px;">
-      <div class="setting-title">Filter by:</div>
-      <div class="form-group">
-        <label for="filterName">Name</label>
-        <input type="text" class="form-control" id="filterName" placeholder="Enter name">
-      </div>
-      <div class="form-group">
-        <label for="filterKeyword">Keyword</label>
-        <input type="text" class="form-control" id="filterKeyword" placeholder="Enter keyword">
-      </div>
-    </div>
-
-    <div class="setting-description p-a-0">
-      <br>
-      <div class="hotkey-row">
-        <div class="type">This Mod requires DominantStranger's EpikChat Enhancements</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Submit Button -->
-  <div class="modal-footer" style="display: flex; justify-content: flex-end;">
-    <button id="submitButton" class="btn btn-primary">Submit</button>
-  </div>
-`;
-
-// Select the updated target container
-const updatedTargetContainer = document.querySelector("#chatSettings_modal > div");
-
-// Check if the updated target container is found
-if (updatedTargetContainer) {
-  // Append the new <div> element to the updated target container
-  updatedTargetContainer.appendChild(newModalContent);
-}
-
-// Set display to none for specific elements
-const modalContentMain = document.querySelector("#chatSettings_modal > div > div.modal-content.main");
-const modalFooter = document.querySelector("#chatSettings_modal > div > div.modal-content.main > div.modal-footer");
-
-if (modalContentMain) {
-  modalContentMain.style.display = 'block';
-}
-
-if (modalFooter) {
-  modalFooter.style.display = 'none';
-}
-
-// Add event listener to the back button to hide the new modal content
-const backButton = newModalContent.querySelector('.section-close');
-
-if (backButton) {
-  backButton.addEventListener('click', function() {
-    newModalContent.style.display = 'none'; // Hide the modal content
-  });
-}
-
-// Add event listener to the Chat Logs button
-newLink.addEventListener('click', function(event) {
-  event.preventDefault(); // Prevents the default action of the <a> element
-
-  // Toggle the visibility of the new modal content
-  if (newModalContent.style.display === 'none') {
-    newModalContent.style.display = 'block'; // Show the modal content
-
-    // Ensure existing modal content is hidden
-    if (modalContentMain) {
-      modalContentMain.style.display = 'none';
-    }
-  } else {
-    newModalContent.style.display = 'none'; // Hide the modal content
-  }
-});
-
-// Ensure the settings button is not interfering
-const settingsButton = document.querySelector('[data-toggle="modal"][data-target="#chatSettings_modal"]');
-
-if (settingsButton) {
-  settingsButton.addEventListener('click', function() {
-    // Ensure the settings modal is shown and the Chat Logs modal content is hidden
-    if (newModalContent.style.display === 'block') {
-      newModalContent.style.display = 'none';
-    }
-  });
-}
-
-// Wait for the DOM to be fully loaded
-window.addEventListener('load', function() {
-    console.log("Script is running!");
-
-    const ulElement = document.querySelector("#ctabs > ul");
-    if (!ulElement) {
-        console.error("#ctabs > ul not found!");
-        return;
-    }
-
-    console.log("Parent element found, creating new list item...");
-
-    // Create the new <li> element
-    const newListItem = document.createElement("li");
-    newListItem.id = "logtab";
-    newListItem.className = "ui-sortable-handle"; // Updated class name
-    newListItem.setAttribute("data-toggle", "tooltip");
-    newListItem.setAttribute("data-placement", "bottom");
-    newListItem.setAttribute("title", "");
-    newListItem.setAttribute("data-original-title", "Chat Logs");
-
-    const selectedDiv = document.createElement("div");
-    selectedDiv.className = "selected";
-    newListItem.appendChild(selectedDiv);
-
-    const tabDiv = document.createElement("div");
-    tabDiv.className = "tab";
-    tabDiv.setAttribute("data-id", "");
-    tabDiv.setAttribute("data-type", "room");
-    tabDiv.setAttribute("data-rid", "12920");
-
-    const img = document.createElement("img");
-    img.className = "img-circle";
-    img.src = "/sites/default/files/chat/room_icon_uploads/188415_1725411952.jpg";
-    img.style.width = "40px";
-    img.style.height = "40px";
-    tabDiv.appendChild(img);
-
-    newListItem.appendChild(tabDiv);
-    ulElement.appendChild(newListItem);
-
-    console.log("New list item appended.");
-
-    // Function to handle clicks on <li> elements
-    function handleClick(event) {
-        // Hide the chatlogs element for all <li> elements
-        const chatlogs = document.getElementById("chatlogs");
-        if (chatlogs) {
-            chatlogs.style.display = "none";
-        }
-
-        // Show chatlogs if the clicked <li> has id="logtab"
-        if (event.target.closest('li').id === "logtab") {
-            const roomHeaderTitle = document.querySelector("#ctabs > div.roomheaderinfo > div.roomheadertitle");
-            const roomHeaderDesc = document.querySelector("#ctabs > div.roomheaderinfo > div.roomheaderdescription");
-            roomHeaderDesc.innerText = "Generate the log in the chat settings.";
-            roomHeaderTitle.innerText = "Chat Logs";
-            chatlogs.style.display = "block";
-        }
-    }
-
-    // Add event listener to the <ul> to handle clicks on its <li> children
-    ulElement.addEventListener('click', function(event) {
-        if (event.target.closest('li')) {
-            handleClick(event);
-        }
-    });
-
-});
-
-
-// Function to create a new HTML element with provided content
-function createNewChatItemHTML(content) {
-  // Function to detect URLs and convert them into clickable links
-  function makeUrlsClickable(text) {
-    const urlRegex = /(\bhttps?:\/\/[^\s/$.?#].[^\s]*)/gi;
-    return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-  }
-
-  // Process the message content to make URLs clickable
-  const messageTextWithLinks = makeUrlsClickable(content.message);
-
-  // Format the timestamp to include both date and time
-  const formattedTimestamp = new Date(content.timestamp).toLocaleString();
-
-  return `
-    <div class="chat-item message" style="color: ${content.format_color};" data-item-id="${content._id}">
-      <div class="time-stamp" aria-label="${formattedTimestamp}" data-microtip-position="top" role="tooltip">${formattedTimestamp}</div>
-      <div class="message-content">
-        <span class="user-name">${content.name}</span>
-        <div class="message-text">${messageTextWithLinks}</div>
-      </div>
-    </div>
-  `;
-}
-
-// Function to copy scrollbar styles
-function copyScrollbarStyles(sourceElement, targetElement) {
-  const scrollbarStyles = window.getComputedStyle(sourceElement, '::-webkit-scrollbar');
-  const scrollbarThumbStyles = window.getComputedStyle(sourceElement, '::-webkit-scrollbar-thumb');
-
-  // Copy scrollbar styles
-  targetElement.style.setProperty('--scrollbar-width', scrollbarStyles.width);
-  targetElement.style.setProperty('--scrollbar-bg', scrollbarStyles.backgroundColor);
-
-  // Copy scrollbar thumb styles
-  targetElement.style.setProperty('--scrollbar-thumb-bg', scrollbarThumbStyles.backgroundColor);
-  targetElement.style.setProperty('--scrollbar-thumb-border-radius', scrollbarThumbStyles.borderRadius);
-
-  // Apply the styles to the target element
-  targetElement.style.scrollbarWidth = 'var(--scrollbar-width)';
-  targetElement.style.scrollbarColor = 'var(--scrollbar-thumb-bg) var(--scrollbar-bg)';
-  targetElement.style.overflowY = 'scroll'; // Ensure the scrollbar is visible
-}
-
-
-
-function simulateClickAtTopLeft() {
-  // Simulate click at the top-left corner of the viewport
-  const topLeftElement = document.elementFromPoint(0, 0);
-  if (topLeftElement) {
-    const clickEvent = new MouseEvent('click', {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      clientX: 0,
-      clientY: 0
-    });
-    topLeftElement.dispatchEvent(clickEvent);
-  }
-
-  // Change classes to simulate the result of the click
-  const ulElement = document.querySelector("#ctabs > ul");
-  if (ulElement) {
-    const listItems = ulElement.querySelectorAll('li');
-    listItems.forEach(li => {
-      if (li.id === "logtab") {
-        li.className = "ui-sortable-handle active";
-      } else {
-        li.className = "ui-sortable-handle";
-      }
-    });
-    console.log("Classes updated based on simulated click.");
-
-    // Call the function to update the room header text
-    updateRoomHeaderText();
-  } else {
-    console.error("#ctabs > ul not found!");
-  }
-}
-
-
-// Ensure the creation of the cloneNode happens before the submit button logic
-const originalNode = document.querySelector("#messagesLC");
-const destinationNode = document.querySelector("#messagesLS");
-
-let clonedNode = null;
-
-// Create the cloneNode and append it to the destinationNode
-if (originalNode && destinationNode) {
-  clonedNode = originalNode.cloneNode(true);
-  clonedNode.id = 'chatlogs';
-  clonedNode.style.overflowY = 'auto';
-  clonedNode.style.zIndex = '1'; // Ensure it's on top
-  clonedNode.style.backgroundColor = '#26282B';  // Set background color
-  clonedNode.style.display = 'none'; // Hide initially
-  clonedNode.style.position = 'absolute';
-  clonedNode.style.top = '0';  // Position at the top inside the destinationNode
-  clonedNode.style.left = '0';  // Position at the left inside the destinationNode
-  clonedNode.style.width = '100%';
-  clonedNode.style.height = '100%';
-
-  // Copy scrollbar styles from #messagesLS
-  copyScrollbarStyles(destinationNode, clonedNode);
-
-  // Append the cloned node to the destinationNode
-  destinationNode.appendChild(clonedNode);
-}
-
-// Handle the click event on the submit button
-const submitButton = newModalContent.querySelector('#submitButton');
-
-if (submitButton) {
-  submitButton.addEventListener('click', async function() {
-    // Get the selected radio button value
-    const selectedRoomType = document.querySelector('input[name="Room"]:checked');
-    const roomTypeValue = selectedRoomType ? selectedRoomType.value : 'None';
-
-    // Get the values of the Name and Keyword inputs
-    const nameValue = document.getElementById('filterName').value.trim();
-    const keywordValue = document.getElementById('filterKeyword').value.trim();
-
-    // Variable to hold the fetched messages
-    let msgs;
-
-    try {
-      // Fetch chat logs based on the room type
-      if (roomTypeValue === 'room') {
-        msgs = await CLOUD.fetchChatLogs({ name: nameValue });
-      } else if (roomTypeValue === 'dm') {
-        msgs = await CLOUD.fetchChatLogs({ dm: nameValue });
-      } else {
-        return; // Exit if no valid room type is selected
-      }
-
-      // Check if msgs were fetched successfully
-      if (msgs && Array.isArray(msgs)) {
-        // Filter objects based on the keyword (if provided)
-        let filteredMsgs = msgs;
-
-        if (keywordValue) {
-          filteredMsgs = msgs.filter(msg =>
-            msg.message && msg.message.toLowerCase().includes(keywordValue.toLowerCase())
-          );
-        }
-
-        // Ensure the cloned node exists
-        if (clonedNode) {
-          // Clear existing content
-          clonedNode.innerHTML = '';
-
-          // Append each filtered message
-          filteredMsgs.forEach(msg => {
-            const messageHTML = createNewChatItemHTML(msg);
-            clonedNode.innerHTML += messageHTML;
-          });
-
-          // Show the cloned node
-          clonedNode.style.display = 'block';
-
-          // Clone and position the close button
-          const originalCloseButton = document.querySelector("#ctabs > div.roomheaderinfo > div.roomMenu > span.closeTab > i");
-          if (originalCloseButton) {
-            const clonedCloseButton = originalCloseButton.cloneNode(true);
-            clonedCloseButton.style.position = 'absolute';
-            clonedCloseButton.style.top = `${originalCloseButton.offsetTop}px`;
-            clonedCloseButton.style.left = `${originalCloseButton.offsetLeft}px`;
-            clonedCloseButton.style.zIndex = '10000'; // Ensure it's on top of the overlay
-            clonedCloseButton.style.cursor = 'pointer';
-
-            originalCloseButton.parentNode.appendChild(clonedCloseButton);
-
-            clonedCloseButton.addEventListener('click', function() {
-              clonedNode.style.display = 'none'; // Hide the overlay
-              clonedCloseButton.remove(); // Remove the cloned close button
-            });
-          }
-
-          // Simulate a mouse click at the top-left pixel
-          simulateClickAtTopLeft();
-        }
-      }
-    } catch (error) {
-      // Handle any errors during fetching or processing
-      console.error('Error:', error);
-    }
-
-    // Hide the modal content after submission (optional)
-    newModalContent.style.display = 'none';
-  });
-}
-
 // ********************************************************************FAVORITE USERS********************************************************************
-
 
 // Key for storing starred usernames in localStorage
 const STARRED_USERNAMES_KEY = 'starredUsernames';
+
+// Flag to prevent reacting to script-induced changes
+let isUpdating = false;
+let scriptActive = true; // Track if the script is active
 
 // Function to load starred usernames from localStorage
 function loadStarredUsernames() {
@@ -1743,10 +1988,39 @@ function saveStarredUsernames(starredUsernames) {
     localStorage.setItem(STARRED_USERNAMES_KEY, JSON.stringify(starredUsernames));
 }
 
-// Function to handle icon click
+// Function to prioritize starred users
+function prioritizeStarredUsers() {
+    if (!scriptActive) return; // Exit if the script is inactive
+
+    const parent = document.getElementById('usersLC');
+    const users = Array.from(parent.getElementsByClassName('user-item'));
+
+    const starredUsernames = new Set(loadStarredUsernames());
+
+    const starred = [];
+    const nonStarred = [];
+
+    users.forEach(user => {
+        const userName = user.querySelector('.user-name').innerText.trim();
+        if (starredUsernames.has(userName)) {
+            starred.push(user);
+        } else {
+            nonStarred.push(user);
+        }
+    });
+
+    isUpdating = true;
+
+    const orderedUsers = [...starred, ...nonStarred];
+    parent.replaceChildren(...orderedUsers); // This replaces children without losing event listeners
+
+    isUpdating = false;
+}
+
+// Function to handle icon click (for starring/unstarring users)
 function handleIconClick(event) {
-    event.stopPropagation(); // Stop the event from bubbling up to the username click handler
-    event.preventDefault(); // Prevent the default action if needed
+    event.stopPropagation();
+    event.preventDefault();
 
     const targetIcon = event.target;
     const userNameElement = targetIcon.closest('.user-layout, .chat-item.message').querySelector('.user-name');
@@ -1755,189 +2029,52 @@ function handleIconClick(event) {
         let starredUsernames = loadStarredUsernames();
 
         if (targetIcon.classList.contains('fa-regular')) {
-            // Change class to filled star and add to starred list
             targetIcon.className = 'fa-solid fa-fw fa-star fav';
             if (!starredUsernames.includes(userName)) {
                 starredUsernames.push(userName);
+                updateDropdown(userName); // Update dropdown with new user
             }
         } else {
-            // Change class back to regular star and remove from starred list
             targetIcon.className = 'fa-regular fa-fw fa-star';
             starredUsernames = starredUsernames.filter(name => name !== userName);
+            removeFromDropdown(userName); // Remove user from dropdown
         }
 
-        // Save updated starred usernames to localStorage
         saveStarredUsernames(starredUsernames);
-
-        // Update the cloned users container and main chat container
-        cloneStarredUsers();
         updateIcons();
         addStarsToChatUsers();
         updateMessageBackgrounds();
+        prioritizeStarredUsers(); // Prioritize users after starring/unstarring
     }
 }
 
-// Function to get the background color from an element
-function getBackgroundColor(element) {
-    return window.getComputedStyle(element).backgroundColor;
-}
-
-// Function to simulate a click on the original node
-function simulateClickOnOriginalNode(originalNode) {
-    if (originalNode) {
-        // Create a new mouse click event
-        const clickEvent = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window
-        });
-
-        // Dispatch the event on the original node
-        originalNode.dispatchEvent(clickEvent);
+// Function to update the dropdown with a new user
+function updateDropdown(userName) {
+    const dropdown = document.querySelector('#favorite-usernames-dropdown');
+    if (dropdown) {
+        const option = document.createElement('option');
+        option.value = userName;
+        option.textContent = userName;
+        dropdown.appendChild(option);
     }
 }
 
-// Function to get the username from an element
-function getUsernameFromElement(element) {
-    const userNameElement = element.querySelector('.user-name');
-    return userNameElement ? userNameElement.textContent.trim() : null;
-}
-
-// Function to apply specific icon styles and spacing
-function applyIconStyles(clonedContainer, originalContainer) {
-    // Get all icon elements in the original container
-    const originalIcons = originalContainer.querySelectorAll('i');
-
-    // Get all icons in the cloned container
-    const clonedIcons = clonedContainer.querySelectorAll('i');
-
-    // Map of original icon styles
-    const iconStylesMap = new Map();
-
-    // Create a map of icon styles based on the original container
-    originalIcons.forEach(icon => {
-        const iconClass = icon.className;
-        const computedStyle = window.getComputedStyle(icon);
-        iconStylesMap.set(iconClass, {
-            color: computedStyle.color,
-            fontSize: computedStyle.fontSize,
-            margin: computedStyle.margin,
-            padding: computedStyle.padding,
-            // Add other styles if needed
-        });
-    });
-
-    // Apply styles to the icons in the cloned container
-    clonedIcons.forEach(icon => {
-        const iconClass = icon.className;
-        const styles = iconStylesMap.get(iconClass);
-        if (styles) {
-            icon.style.color = styles.color;
-            icon.style.fontSize = styles.fontSize;
-            icon.style.margin = styles.margin;
-            icon.style.padding = styles.padding;
-            // Apply other styles if needed
+// Function to remove a user from the dropdown
+function removeFromDropdown(userName) {
+    const dropdown = document.querySelector('#favorite-usernames-dropdown');
+    if (dropdown) {
+        const optionToRemove = Array.from(dropdown.options).find(option => option.value === userName);
+        if (optionToRemove) {
+            dropdown.remove(optionToRemove.index);
         }
-    });
-}
-
-// Function to update star icons in the cloned container
-function updateStarIconsInClonedContainer() {
-    const clonedContainer = document.querySelector("#clonedContainer");
-    const starredUsernames = loadStarredUsernames();
-
-    if (clonedContainer) {
-        Array.from(clonedContainer.children).forEach(child => {
-            const userName = getUsernameFromElement(child);
-            if (userName) {
-                const starIcon = child.querySelector('.fa-star');
-                if (starIcon) {
-                    starIcon.className = starredUsernames.includes(userName) ? 'fa-solid fa-fw fa-star fav' : 'fa-regular fa-fw fa-star';
-                }
-            }
-        });
     }
 }
 
-// Function to clone the #usersLC container with starred users only
-function cloneStarredUsers() {
-    const usersLC = document.querySelector("#usersLC");
-
-    if (usersLC) {
-        // Load the starred usernames from localStorage
-        const starredUsernames = loadStarredUsernames();
-
-        // Check if the cloned container already exists
-        let clonedContainer = document.querySelector("#clonedContainer");
-
-        if (!clonedContainer) {
-            // Clone the entire #usersLC element
-            clonedContainer = usersLC.cloneNode(false); // Shallow clone to avoid copying child nodes
-
-            // Get the background color of the original container
-            const originalBackgroundColor = getBackgroundColor(usersLC);
-
-            // Set the background color of the cloned container to match the original
-            clonedContainer.style.backgroundColor = originalBackgroundColor;
-            clonedContainer.style.position = 'relative'; // Ensure the container is positioned correctly
-            clonedContainer.style.overflow = 'auto'; // Allow scrolling if content overflows
-            clonedContainer.style.border = 'none'; // Remove any border
-            clonedContainer.style.padding = '0'; // Remove any padding
-            clonedContainer.style.margin = '0'; // Remove any margin
-            clonedContainer.style.boxShadow = 'none'; // Remove any box shadow
-            clonedContainer.style.visibility = 'visible'; // Ensure visibility
-            clonedContainer.style.opacity = '1'; // Ensure full opacity
-            clonedContainer.style.zIndex = '9999'; // Ensure it's above other elements if necessary
-            clonedContainer.id = 'clonedContainer'; // Add an ID for reference
-
-            // Insert the cloned container as a sibling above #usersLC
-            usersLC.parentNode.insertBefore(clonedContainer, usersLC);
-        }
-
-        // Remove all children from the cloned container
-        while (clonedContainer.firstChild) {
-            clonedContainer.removeChild(clonedContainer.firstChild);
-        }
-
-        // Filter and clone nodes based on starred usernames
-        Array.from(usersLC.children).forEach(child => {
-            const userName = getUsernameFromElement(child);
-            if (starredUsernames.includes(userName)) {
-                // Clone and append the matching node to the cloned container
-                const clonedNode = child.cloneNode(true);
-                clonedContainer.appendChild(clonedNode);
-
-                // Apply icon styles
-                applyIconStyles(clonedContainer, usersLC);
-
-                // Attach the existing click event handler to the star icon in the cloned container
-                const starIcon = clonedNode.querySelector('.fa-star');
-                if (starIcon) {
-                    starIcon.addEventListener('click', handleIconClick);
-                }
-
-                // Store the reference to the original node
-                clonedNode.dataset.originalNodeId = userName;
-
-                // Add click event listener to the cloned container to simulate a click on the original node
-                clonedContainer.addEventListener('click', (event) => {
-                    const clickedElement = event.target.closest('[data-original-node-id]');
-                    if (clickedElement) {
-                        const originalNodeId = clickedElement.dataset.originalNodeId;
-                        const originalNode = Array.from(usersLC.children).find(child => getUsernameFromElement(child) === originalNodeId);
-                        simulateClickOnOriginalNode(originalNode);
-                    }
-                });
-            }
-        });
-
-        // Ensure initial stars are correctly applied
-        updateStarIconsInClonedContainer();
-    }
-}
 
 // Function to update icons for existing children
 function updateIcons() {
+    if (!scriptActive) return; // Exit if the script is inactive
+
     const parentElement = document.querySelector("#usersLC");
     if (parentElement) {
         const starredUsernames = loadStarredUsernames();
@@ -1948,15 +2085,14 @@ function updateIcons() {
                 const userNameElement = headerDiv.querySelector('.user-name');
                 if (userNameElement) {
                     const userName = userNameElement.textContent.trim();
-
                     let iconElement = headerDiv.previousElementSibling;
+
                     if (!iconElement || !iconElement.classList.contains('fa-star')) {
                         iconElement = document.createElement('i');
                         iconElement.className = 'fa-regular fa-fw fa-star';
                         iconElement.style.marginRight = '8px';
                         iconElement.style.display = 'inline-block';
                         iconElement.style.verticalAlign = 'middle';
-
                         iconElement.addEventListener('click', handleIconClick);
                         headerDiv.parentNode.insertBefore(iconElement, headerDiv);
                     }
@@ -1970,6 +2106,8 @@ function updateIcons() {
 
 // Function to add stars to chat users
 function addStarsToChatUsers() {
+    if (!scriptActive) return; // Exit if the script is inactive
+
     const starredUsernames = loadStarredUsernames();
     const messagesContainer = document.querySelector("#messagesLC");
 
@@ -1977,34 +2115,47 @@ function addStarsToChatUsers() {
         Array.from(messagesContainer.children).forEach(child => {
             const userName = getUsernameFromElement(child);
             if (userName) {
+                // Find or create the star icon
                 let starIcon = child.querySelector('.fa-star');
                 if (!starIcon) {
                     starIcon = document.createElement('i');
                     starIcon.className = 'fa-regular fa-fw fa-star';
+                    starIcon.style.margin = '0';
                     starIcon.style.marginRight = '8px';
                     starIcon.style.display = 'inline-block';
-                    starIcon.style.verticalAlign = 'middle';
-
+                    starIcon.style.lineHeight = '1';
+                    starIcon.style.verticalAlign = 'bottom';
                     starIcon.addEventListener('click', handleIconClick);
                     child.insertBefore(starIcon, child.firstChild);
                 }
 
+                // Update the icon's class based on the starred status
                 starIcon.className = starredUsernames.includes(userName) ? 'fa-solid fa-fw fa-star fav' : 'fa-regular fa-fw fa-star';
             }
         });
     }
 }
 
-// Function to update the message background colors
+// Function to get the username from an element
+function getUsernameFromElement(element) {
+    const userNameElement = element.querySelector('.user-name'); // Adjust this selector based on your structure
+    return userNameElement ? userNameElement.textContent.trim() : null;
+}
+
+// Function to update message backgrounds
 function updateMessageBackgrounds() {
+    if (!scriptActive) return; // Exit if the script is inactive
+
     const starredUsernames = loadStarredUsernames();
+    const starredUserColors = JSON.parse(localStorage.getItem('starredUserColors')) || {};
     const messagesContainer = document.querySelector("#messagesLC");
 
     if (messagesContainer) {
         Array.from(messagesContainer.children).forEach(child => {
             const userName = getUsernameFromElement(child);
             if (userName && starredUsernames.includes(userName)) {
-                child.style.backgroundColor = '#4E4E4E'; // Apply background color
+                // Apply the user's specific background color from starredUserColors
+                child.style.backgroundColor = starredUserColors[userName] || '#545454'; // Fallback to default if not set
             } else {
                 child.style.backgroundColor = ''; // Reset background color
             }
@@ -2012,38 +2163,630 @@ function updateMessageBackgrounds() {
     }
 }
 
-// Initialize everything on page load
-document.addEventListener("DOMContentLoaded", () => {
-    cloneStarredUsers();
-    updateIcons();
-    addStarsToChatUsers();
-    updateMessageBackgrounds();
-});
 
-// Monitor for changes in the #usersLC container
-const userListObserver = new MutationObserver(() => {
-    updateIcons();
-    cloneStarredUsers();
-    addStarsToChatUsers();
-    updateMessageBackgrounds();
-});
+// Function to initialize filter state from localStorage
+function initializeFilterState2() {
+    const mod2State = localStorage.getItem('mod2');
+    const savedFilter = localStorage.getItem('filterText');
 
-const usersLC = document.querySelector("#usersLC");
-if (usersLC) {
-    userListObserver.observe(usersLC, { childList: true, subtree: true });
+    // Set scriptActive based on the value of mod2State
+    scriptActive = mod2State !== 'disabled'; // Enable if not disabled
+
+    updateMessageVisibility(); // Update message visibility based on the current filter
 }
 
-// Monitor for changes in the #messagesLC container
-const messagesObserver = new MutationObserver(() => {
-    addStarsToChatUsers();
-    updateMessageBackgrounds();
+// Initialize the filter state
+initializeFilterState2();
+
+// Add event listener for custom switch state changes
+window.addEventListener('switchStateChanged', function(event) {
+    if (event.detail.id === 'mod2') {
+        scriptActive = event.detail.state === 'enabled';
+    }
 });
 
+
+// Function to create a MutationObserver
+function createObserver(target, callback) {
+    const observer = new MutationObserver(callback);
+    observer.observe(target, {
+        childList: true, // Observe direct children
+        subtree: true // Observe all descendants
+    });
+    return observer;
+}
+
+// Setup user list element
+const parent = document.getElementById('usersLC');
+if (parent) {
+    // Track the previous user list to detect changes
+    let previousUserList = Array.from(parent.children).map(user => user.outerHTML).join();
+
+    // User list observer focused on detecting changes
+    createObserver(parent, () => {
+        const currentUserList = Array.from(parent.children).map(user => user.outerHTML).join();
+
+        // Check if the user list has been modified or sorted
+        if (currentUserList !== previousUserList) {
+            previousUserList = currentUserList; // Update the previous user list
+
+            // Call your functions here
+            prioritizeStarredUsers(); // Prioritize starred users
+            updateIcons(); // Update user icons
+        }
+    });
+} else {
+    console.log('User list element not found.'); // Optional: keep this if you want to know when the element is missing
+}
+
+// Messages observer remains unchanged
 const messagesLC = document.querySelector("#messagesLC");
 if (messagesLC) {
-    messagesObserver.observe(messagesLC, { childList: true, subtree: true });
+    createObserver(messagesLC, () => {
+        if (scriptActive) {
+            addStarsToChatUsers();
+            updateMessageBackgrounds();
+        }
+    });
+}
+
+// ********************************************************************Translation Mods********************************************************************
+
+
+// Language map with full names
+const languageMap = {
+    'aa': 'Afar',
+    'ab': 'Abkhazian',
+    'ace': 'Achinese',
+    'ach': 'Acoli',
+    'af': 'Afrikaans',
+    'ak': 'Akan',
+    'alz': 'Alur',
+    'am': 'Amharic',
+    'ar': 'Arabic',
+    'as': 'Assamese',
+    'av': 'Avaric',
+    'awa': 'Awadhi',
+    'ay': 'Aymara',
+    'az': 'Azerbaijani',
+    'ba': 'Bashkir',
+    'bal': 'Baluchi',
+    'ban': 'Balinese',
+    'bbc': 'Batak Toba',
+    'bci': 'Baoulé',
+    'be': 'Belarusian',
+    'bem': 'Bemba',
+    'ber': 'Berber',
+    'ber-Latn': 'Berber (Latin)',
+    'bew': 'Betawi',
+    'bg': 'Bulgarian',
+    'bho': 'Bhojpuri',
+    'bik': 'Bikol',
+    'bm': 'Bambara',
+    'bm-Nkoo': 'Bambara (Nkoo)',
+    'bn': 'Bengali',
+    'bo': 'Tibetan',
+    'br': 'Breton',
+    'bs': 'Bosnian',
+    'bts': 'Batak Simalungun',
+    'btx': 'Batak Karo',
+    'bua': 'Buryat',
+    'ca': 'Catalan',
+    'ce': 'Chechen',
+    'ceb': 'Cebuano',
+    'cgg': 'Chiga',
+    'ch': 'Chamorro',
+    'chk': 'Chuukese',
+    'chm': 'Mari',
+    'ckb': 'Central Kurdish',
+    'cnh': 'Hakha Chin',
+    'co': 'Corsican',
+    'crh': 'Crimean Tatar',
+    'crs': 'Seselwa Creole French',
+    'cs': 'Czech',
+    'cv': 'Chuvash',
+    'cy': 'Welsh',
+    'da': 'Danish',
+    'de': 'German',
+    'din': 'Dinka',
+    'doi': 'Dogri',
+    'dov': 'Dombe',
+    'dv': 'Divehi',
+    'dyu': 'Dyula',
+    'dz': 'Dzongkha',
+    'ee': 'Ewe',
+    'el': 'Greek',
+    'en': 'English',
+    'eo': 'Esperanto',
+    'es': 'Spanish',
+    'et': 'Estonian',
+    'eu': 'Basque',
+    'fa': 'Persian',
+    'fa-AF': 'Dari',
+    'ff': 'Fulah',
+    'fi': 'Finnish',
+    'fj': 'Fijian',
+    'fo': 'Faroese',
+    'fon': 'Fon',
+    'fr': 'French',
+    'fur': 'Friulian',
+    'fy': 'Western Frisian',
+    'ga': 'Irish',
+    'gaa': 'Ga',
+    'gd': 'Scottish Gaelic',
+    'gl': 'Galician',
+    'gn': 'Guarani',
+    'gom': 'Goan Konkani',
+    'gu': 'Gujarati',
+    'gv': 'Manx',
+    'ha': 'Hausa',
+    'haw': 'Hawaiian',
+    'he': 'Hebrew',
+    'hi': 'Hindi',
+    'hil': 'Hiligaynon',
+    'hmn': 'Hmong',
+    'hr': 'Croatian',
+    'hrx': 'Hunsrik',
+    'ht': 'Haitian Creole',
+    'hu': 'Hungarian',
+    'hy': 'Armenian',
+    'iba': 'Iban',
+    'id': 'Indonesian',
+    'ig': 'Igbo',
+    'ilo': 'Ilocano',
+    'is': 'Icelandic',
+    'it': 'Italian',
+    'iw': 'Hebrew',
+    'ja': 'Japanese',
+    'jam': 'Jamaican Creole English',
+    'jv': 'Javanese',
+    'jw': 'Javanese',
+    'ka': 'Georgian',
+    'kac': 'Kachin',
+    'kek': 'Kekchi',
+    'kg': 'Kongo',
+    'kha': 'Khasi',
+    'kk': 'Kazakh',
+    'kl': 'Kalaallisut',
+    'km': 'Khmer',
+    'kn': 'Kannada',
+    'ko': 'Korean',
+    'kr': 'Kanuri',
+    'kri': 'Krio',
+    'ktu': 'Kituba',
+    'ku': 'Kurdish',
+    'kv': 'Komi',
+    'ky': 'Kyrgyz',
+    'la': 'Latin',
+    'lb': 'Luxembourgish',
+    'lg': 'Luganda',
+    'li': 'Limburgish',
+    'lij': 'Ligurian',
+    'lmo': 'Lombard',
+    'ln': 'Lingala',
+    'lo': 'Lao',
+    'lt': 'Lithuanian',
+    'ltg': 'Latgalian',
+    'luo': 'Luo',
+    'lus': 'Mizo',
+    'lv': 'Latvian',
+    'mad': 'Madurese',
+    'mai': 'Maithili',
+    'mak': 'Makasar',
+    'mam': 'Mam',
+    'mfe': 'Morisyen',
+    'mg': 'Malagasy',
+    'mh': 'Marshallese',
+    'mi': 'Māori',
+    'min': 'Minangkabau',
+    'mk': 'Macedonian',
+    'ml': 'Malayalam',
+    'mn': 'Mongolian',
+    'mni-Mtei': 'Meitei',
+    'mr': 'Marathi',
+    'ms': 'Malay',
+    'ms-Arab': 'Malay (Arabic script)',
+    'mt': 'Maltese',
+    'mwr': 'Marwari',
+    'my': 'Burmese',
+    'ndc-ZW': 'Ndau',
+    'ne': 'Nepali',
+    'new': 'Newari',
+    'nhe': 'Eastern Huasteca Nahuatl',
+    'nl': 'Dutch',
+    'no': 'Norwegian',
+    'nr': 'Southern Ndebele',
+    'nso': 'Northern Sotho',
+    'nus': 'Nuer',
+    'ny': 'Chichewa',
+    'oc': 'Occitan',
+    'om': 'Oromo',
+    'or': 'Odia',
+    'os': 'Ossetian',
+    'pa': 'Punjabi',
+    'pa-Arab': 'Punjabi (Arabic)',
+    'pag': 'Pangasinan',
+    'pam': 'Kapampangan',
+    'pap': 'Papiamento',
+    'pl': 'Polish',
+    'ps': 'Pashto',
+    'pt': 'Portuguese',
+    'pt-PT': 'Portuguese (Portugal)',
+    'qu': 'Quechua',
+    'rn': 'Kirundi',
+    'ro': 'Romanian',
+    'rom': 'Romani',
+    'ru': 'Russian',
+    'rw': 'Kinyarwanda',
+    'sa': 'Sanskrit',
+    'sah': 'Yakut',
+    'sat-Latn': 'Santali (Latin)',
+    'scn': 'Sicilian',
+    'sd': 'Sindhi',
+    'se': 'Northern Sami',
+    'sg': 'Sango',
+    'shn': 'Shan',
+    'si': 'Sinhala',
+    'sk': 'Slovak',
+    'sl': 'Slovenian',
+    'sm': 'Samoan',
+    'sn': 'Shona',
+    'so': 'Somali',
+    'sq': 'Albanian',
+    'sr': 'Serbian',
+    'ss': 'Swati',
+    'st': 'Southern Sotho',
+    'su': 'Sundanese',
+    'sus': 'Susu',
+    'sv': 'Swedish',
+    'sw': 'Swahili',
+    'szl': 'Silesian',
+    'ta': 'Tamil',
+    'tcy': 'Tulu',
+    'te': 'Telugu',
+    'tet': 'Tetum',
+    'tg': 'Tajik',
+    'th': 'Thai',
+    'ti': 'Tigrinya',
+    'tiv': 'Tiv',
+    'tk': 'Turkmen',
+    'tl': 'Tagalog',
+    'tn': 'Tswana',
+    'to': 'Tongan',
+    'tpi': 'Tok Pisin',
+    'tr': 'Turkish',
+    'trp': 'Kokborok',
+    'ts': 'Tsonga',
+    'tt': 'Tatar',
+    'tum': 'Tumbuka',
+    'tw': 'Twi',
+    'ty': 'Tahitian',
+    'ug': 'Uyghur',
+    'uk': 'Ukrainian',
+    'ur': 'Urdu',
+    'uz': 'Uzbek',
+    've': 'Venda',
+    'vi': 'Vietnamese',
+    'vo': 'Volapük',
+    'war': 'Waray',
+    'wo': 'Wolof',
+    'xh': 'Xhosa',
+    'yi': 'Yiddish',
+    'yo': 'Yoruba',
+    'yue': 'Cantonese',
+    'zh': 'Chinese',
+    'zu': 'Zulu'
+};
+ // Fetch supported languages using API key
+const apiKey = 'AIzaSyC_iX3grLK49o6pQh5ZLGr7T03HAN8pYpM'; // Replace with your API key
+
+let newButton; // Declare the newButton variable at the top for scope access
+
+// Function to check and update the translator state
+function updateTranslatorState() {
+    const mod3State = localStorage.getItem("mod3");
+    console.log(`Current mod3 state: ${mod3State}`); // Log current state for debugging
+
+    // Remove any existing translator UI if it exists
+    const existingDropdown = document.getElementById('languageDropdown');
+    const existingCheckbox = document.getElementById('newCheckbox');
+
+    // Remove existing UI elements if they exist
+    if (existingDropdown) {
+        existingDropdown.remove();
+    }
+    if (existingCheckbox) {
+        existingCheckbox.remove();
+    }
+
+    // If mod3 is enabled, create the translator UI
+    if (mod3State === "enabled") {
+        console.log('Translator module is enabled.');
+        createTranslator(); // Call the function to initialize the translator UI
+    } else {
+        console.log('Translator module is disabled.');
+        removeTranslatorListeners(); // Remove listeners if disabled
+    }
+
+    updateTranslationIconState(); // Update the translation icon state
+}
+
+// Function to remove event listeners for translation
+function removeTranslatorListeners() {
+    const inputNode = document.querySelector(".emojionearea-editor");
+    if (inputNode) {
+        inputNode.removeEventListener('keydown', handleEnterKey);
+    }
+}
+
+// Event handler for Enter key
+async function handleEnterKey(event) {
+    const mod3State = localStorage.getItem("mod3");
+    const inputNode = document.querySelector(".emojionearea-editor");
+    const checkbox = document.getElementById('newCheckbox');
+
+    // Check if mod3 is enabled and the checkbox is checked
+    if (event.key === 'Enter' && mod3State === "enabled" && checkbox.checked) {
+        event.preventDefault(); // Prevent the default send action
+        event.stopPropagation(); // Stop the event from bubbling up
+
+        // Intercept the inner text from the specified node
+        const text = inputNode.textContent.trim(); // Use textContent to get the text
+        const targetLanguage = document.getElementById('languageDropdown').value;
+
+        console.log('Intercepted text:', text);
+        console.log('Selected language:', targetLanguage);
+
+        if (!text || !targetLanguage) {
+            alert('Please enter text and select a language.');
+            return;
+        }
+
+        try {
+            const translateResponse = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    q: text,
+                    target: targetLanguage,
+                }),
+            });
+
+            const translationData = await translateResponse.json();
+            if (translationData.error) {
+                throw new Error(translationData.error.message);
+            }
+
+            cApp.t_me(translationData.data.translations[0].translatedText);
+            inputNode.textContent = ""; // Clear the contenteditable area
+        } catch (error) {
+            console.error('Error translating text:', error);
+            alert('Translation failed: ' + error.message);
+        }
+    }
+}
+
+// Function to create the translator UI
+async function createTranslator() {
+    // Sort the language options alphabetically by their full name
+    const sortedLanguages = Object.entries(languageMap).sort((a, b) => a[1].localeCompare(b[1]));
+
+    function waitForElement(selector, callback, interval = 100) {
+        const elementCheck = setInterval(() => {
+            const element = document.querySelector(selector);
+            if (element) {
+                clearInterval(elementCheck);
+                callback(element);
+            }
+        }, interval);
+    }
+
+    function createAndPositionDropdown(targetLocation) {
+        // Create a container for the dropdown and checkbox
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.zIndex = '1000'; // Ensure it appears above other elements
+        container.style.display = 'flex'; // Use flex to position items horizontally
+
+        // Get the target element position and size
+        const targetRect = targetLocation.getBoundingClientRect();
+
+        // Position the container to the left of the target node
+        container.style.top = `${targetRect.top + window.scrollY}px`;  // Align vertically
+        container.style.left = `${targetRect.left + window.scrollX - 35}px`; // Place to the left of the target (100px is arbitrary, adjust as needed)
+
+        // Create the checkbox
+        const newCheckbox = document.createElement('input');
+        newCheckbox.type = 'checkbox';
+        newCheckbox.id = 'newCheckbox';
+        newCheckbox.style.marginRight = '0px'; // Space between checkbox and dropdown
+
+        // Create label for the checkbox
+        const checkboxLabel = document.createElement('label');
+        checkboxLabel.htmlFor = 'newCheckbox';
+        checkboxLabel.innerText = ''; // Empty text for the checkbox
+
+        // Create language dropdown
+        const languageDropdown = document.createElement('select');
+        languageDropdown.id = 'languageDropdown'; // Assign an ID to the dropdown
+        languageDropdown.style.width = '20px'; // Set the width of the dropdown
+        languageDropdown.style.backgroundColor = '#34363A';
+
+        // Load the saved language from localStorage and set it as default
+        const savedLanguage = localStorage.getItem("selectedLanguage") || 'en'; // Default to English
+
+        // Populate dropdown with languages (clear first)
+        languageDropdown.innerHTML = '';
+        sortedLanguages.forEach(([code, name]) => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.text = name;
+            languageDropdown.appendChild(option);
+        });
+
+        languageDropdown.value = savedLanguage;
+
+        // Append the checkbox and label to the container first, then the dropdown
+        container.appendChild(newCheckbox);
+        container.appendChild(checkboxLabel);
+        container.appendChild(languageDropdown);
+
+        // Append the container to the body
+        document.body.appendChild(container);
+
+        console.log('New dropdown and checkbox container created and appended to the body.');
+    }
+
+    // Start polling to wait for the target element
+    waitForElement("#chatInputWrapper > div.dropup > div.circlecolor", (element) => {
+        createAndPositionDropdown(element);
+    });
+}
+
+// Call the function to check the initial state
+updateTranslatorState(); // Ensure initial state is checked and UI created if needed
+
+// Add event listener for the Enter key
+const inputNode = document.querySelector(".emojionearea-editor");
+if (inputNode) {
+    inputNode.addEventListener('keydown', handleEnterKey, true); // Use capture phase
+} else {
+    console.log("Input node not found!");
 }
 
 
-CLOUD = await require('cloud');
 
+// Create the translation icon and functionality
+function createTranslationIcon() {
+    const translationButton = document.createElement('button');
+    translationButton.type = 'button';
+    translationButton.className = 'btn btn-sm btn-default m-t-0'; // Match existing button class
+
+    const newIcon = document.createElement('i');
+    newIcon.className = 'fa-solid fa-globe';
+    newIcon.style.marginLeft = '7px'; // Add a margin for spacing
+
+    translationButton.appendChild(newIcon);
+
+    // Add padding to the message preview node
+    const messagePreviewNode = document.querySelector("#messagePopout > div.messagePreview");
+    if (messagePreviewNode) {
+        messagePreviewNode.style.paddingLeft = '20px'; // Apply padding initially
+    }
+
+    translationButton.onclick = async function() {
+        if (messagePreviewNode) {
+            const clonedNode = messagePreviewNode.cloneNode(true);
+            // Remove <b> tags and get the text
+            const boldElements = clonedNode.getElementsByTagName('b');
+            while (boldElements.length > 0) {
+                boldElements[0].parentNode.removeChild(boldElements[0]);
+            }
+            const messageText = clonedNode.innerText;
+
+            // Prepare to translate the messageText to English
+            const targetLanguage = 'en';
+
+            if (!messageText) {
+                console.error('No text to translate!');
+                return;
+            }
+
+            try {
+                const translateResponse = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        q: messageText,
+                        target: targetLanguage,
+                    }),
+                });
+
+                const translationData = await translateResponse.json();
+                if (translationData.error) {
+                    throw new Error(translationData.error.message);
+                }
+
+                const translatedText = translationData.data.translations[0].translatedText;
+                const detectedSourceLanguage = translationData.data.translations[0].detectedSourceLanguage;
+                const fullLanguageName = languageMap[detectedSourceLanguage] || detectedSourceLanguage; // Use languageMap to get the full name
+
+                // Create a new div based on the specified structure
+                const newDiv = document.createElement('div');
+                newDiv.className = 'chat-item welcome-message'; // Set classes
+                newDiv.style.color = '#C2C2C2'; // Set the text color to #C2C2C2
+                newDiv.setAttribute('data-item-id', ''); // Set the data attribute
+
+                // Create the inner structure
+                const userRightDiv = document.createElement('div');
+                userRightDiv.className = 'user-right';
+
+                const welcomeMessageContentDiv = document.createElement('div');
+                welcomeMessageContentDiv.className = 'welcome-message-content';
+                welcomeMessageContentDiv.textContent = `${fullLanguageName}: ${translatedText}`; // Fill with the language name and translated text
+
+                // Append the inner structure
+                userRightDiv.appendChild(welcomeMessageContentDiv);
+                newDiv.appendChild(userRightDiv);
+
+                // Append the new div to messagesLC
+                const messagesLCNode = document.querySelector("#messagesLC");
+                if (messagesLCNode) {
+                    messagesLCNode.appendChild(newDiv);
+                } else {
+                    console.error('MessagesLC node not found!');
+                }
+            } catch (error) {
+                console.error('Error translating text:', error);
+                alert('Translation failed: ' + error.message);
+            }
+        } else {
+            console.error('Message preview node not found!');
+        }
+    };
+
+    // Insert the translation button in the desired location
+    const mentionButton = document.querySelector("#messagePopout > div.btn-toolbar > div > button.btn.btn-sm.btn-default.m-t-0.mention-user");
+    if (mentionButton) {
+        mentionButton.parentNode.insertBefore(translationButton, mentionButton);
+    }
+}
+
+// Function to show/hide the translation icon based on mod4 state
+function updateTranslationIconState() {
+    const mod4State = localStorage.getItem("mod4");
+    const translationButton = document.querySelector('.fa-globe'); // Adjusted to find the icon directly
+    if (translationButton) {
+        translationButton.parentNode.style.display = (mod4State === "enabled") ? 'inline-block' : 'none';
+    }
+}
+
+// Add event listener for mod4 state changes
+window.addEventListener('switchStateChanged', function(event) {
+    if (event.detail.id === 'mod4') {
+        localStorage.setItem("mod4", event.detail.state);
+        updateTranslationIconState(); // Update the visibility of the icon
+    }
+});
+
+// Initialize the translation icon and state
+createTranslationIcon();
+updateTranslationIconState();
+
+// Initial check for localStorage value
+updateTranslatorState();
+
+// Add event listener for custom switch state changes
+window.addEventListener('switchStateChanged', function(event) {
+    console.log(`Custom Event - Switch ID: ${event.detail.id}, State: ${event.detail.state}`);
+    localStorage.setItem("mod3", event.detail.state);
+    console.log(`Updated localStorage: mod3 = ${event.detail.state}`);
+    updateTranslatorState();
+});
+
+// Log initial state for debugging
+console.log(`Initial mod3 value: ${localStorage.getItem("mod3")}`);
